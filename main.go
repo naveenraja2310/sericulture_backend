@@ -127,7 +127,7 @@ func connectMQTT() {
 
 	opts := mqtt.NewClientOptions()
 
-	opts.AddBroker("tcp://13.206.82.13:1883")
+	opts.AddBroker("tcp://13.205.144.42:1883")
 
 	opts.SetClientID("golang-backend")
 
