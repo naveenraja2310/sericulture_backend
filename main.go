@@ -9,6 +9,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	websocket "github.com/gofiber/websocket/v2"
 )
 
 // ============================================================
@@ -36,6 +37,8 @@ type Telemetry struct {
 	GprsStatus string `json:"gprsStatus"`
 
 	DeviceID string `json:"deviceId"`
+
+	PowerOn int `json:"powerOn"`
 }
 
 // ============================================================
@@ -48,6 +51,9 @@ var (
 	mutex sync.Mutex
 
 	deviceTelemetry = map[string]Telemetry{}
+
+	subscriptionReady = make(chan bool, 1)
+	deviceClients     = map[string]map[*websocket.Conn]bool{}
 )
 
 // ============================================================
@@ -57,6 +63,8 @@ var (
 func main() {
 
 	connectMQTT()
+
+	<-subscriptionReady
 
 	app := fiber.New()
 
@@ -78,10 +86,23 @@ func main() {
 	})
 
 	// ========================================================
-	// GET DEVICE STATUS
+	// GET DEVICE STATUS (HTTP)
 	// ========================================================
 
 	app.Get("/device/:id/status", getDeviceStatus)
+
+	// ========================================================
+	// GET DEVICE STATUS (WebSocket)
+	// Clients can connect to `/device/:id/ws` to receive live updates
+	// ========================================================
+
+	app.Get("/device/:id/ws", func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("deviceID", c.Params("id"))
+			return c.Next()
+		}
+		return c.Status(fiber.StatusUpgradeRequired).SendString("Upgrade Required")
+	}, websocket.New(deviceStatusWS))
 
 	// ========================================================
 	// MANUAL DEVICE CONTROL
@@ -269,6 +290,8 @@ func subscribeTelemetry() {
 
 		fmt.Println("✅ Subscribed:", topic)
 
+		subscriptionReady <- true
+
 	} else {
 
 		fmt.Println("❌ Subscribe Timeout")
@@ -308,6 +331,21 @@ func messageHandler(client mqtt.Client, msg mqtt.Message) {
 	mutex.Unlock()
 
 	fmt.Println("✅ Telemetry Updated For:", telemetry.DeviceID)
+
+	// Broadcast telemetry update to any connected websocket clients
+	mutex.Lock()
+	conns := deviceClients[telemetry.DeviceID]
+	var clients []*websocket.Conn
+	for c := range conns {
+		clients = append(clients, c)
+	}
+	mutex.Unlock()
+
+	for _, c := range clients {
+		if err := c.WriteJSON(telemetry); err != nil {
+			fmt.Println("❌ WebSocket Write Error:", err)
+		}
+	}
 }
 
 // ============================================================
@@ -386,6 +424,46 @@ func getDeviceStatus(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(data)
+}
+
+// ============================================================
+// WEBSOCKET: DEVICE STATUS
+// ============================================================
+
+func deviceStatusWS(c *websocket.Conn) {
+	// Get device ID from fiber.Ctx locals set before upgrade
+	v := c.Locals("deviceID")
+	deviceID, _ := v.(string)
+	if deviceID == "" {
+		c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "device id missing"))
+		return
+	}
+
+	// Register client
+	mutex.Lock()
+	if deviceClients[deviceID] == nil {
+		deviceClients[deviceID] = make(map[*websocket.Conn]bool)
+	}
+	deviceClients[deviceID][c] = true
+
+	// Send initial status if available
+	if data, ok := deviceTelemetry[deviceID]; ok {
+		_ = c.WriteJSON(data)
+	}
+	mutex.Unlock()
+
+	// Keep connection open; read messages so TCP stays alive
+	for {
+		if _, _, err := c.ReadMessage(); err != nil {
+			break
+		}
+	}
+
+	// Unregister client
+	mutex.Lock()
+	delete(deviceClients[deviceID], c)
+	mutex.Unlock()
+	c.Close()
 }
 
 // ============================================================
