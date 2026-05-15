@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gofiber/fiber/v2"
@@ -116,7 +117,17 @@ func main() {
 
 	app.Post("/device/:id/fan-cycle", setFanCycle)
 
-	app.Listen(":3000")
+	// ========================================================
+	// START SERVER
+	// ========================================================
+
+	fmt.Println("🚀 HTTP Server Started On Port 3000")
+
+	err := app.Listen(":3000")
+
+	if err != nil {
+		fmt.Println("❌ Fiber Error:", err)
+	}
 }
 
 // ============================================================
@@ -127,42 +138,120 @@ func connectMQTT() {
 
 	opts := mqtt.NewClientOptions()
 
+	// ========================================================
+	// BROKER
+	// ========================================================
+
 	opts.AddBroker("tcp://13.205.144.42:1883")
 
-	opts.SetClientID("golang-backend")
+	// ========================================================
+	// UNIQUE CLIENT ID
+	// ========================================================
+
+	clientID := fmt.Sprintf(
+		"golang-backend-%d",
+		time.Now().Unix(),
+	)
+
+	opts.SetClientID(clientID)
+
+	// ========================================================
+	// MQTT SETTINGS
+	// ========================================================
+
+	opts.SetCleanSession(false)
 
 	opts.AutoReconnect = true
+
+	opts.ConnectRetry = true
+
+	opts.ConnectRetryInterval = 5 * time.Second
+
+	opts.KeepAlive = 60
+
+	opts.PingTimeout = 10 * time.Second
+
+	opts.Order = false
+
+	// ========================================================
+	// CONNECTED
+	// ========================================================
 
 	opts.OnConnect = func(client mqtt.Client) {
 
 		fmt.Println("✅ MQTT Connected")
 
-		subscribeTelemetry()
+		go subscribeTelemetry()
 	}
+
+	// ========================================================
+	// CONNECTION LOST
+	// ========================================================
 
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 
 		fmt.Println("❌ MQTT Connection Lost:", err)
 	}
 
+	// ========================================================
+	// RECONNECT
+	// ========================================================
+
+	opts.OnReconnecting = func(client mqtt.Client, opts *mqtt.ClientOptions) {
+
+		fmt.Println("🔄 MQTT Reconnecting...")
+	}
+
+	// ========================================================
+	// CREATE CLIENT
+	// ========================================================
+
 	mqttClient = mqtt.NewClient(opts)
+
+	// ========================================================
+	// CONNECT
+	// ========================================================
+
+	fmt.Println("🔌 Connecting MQTT Broker...")
 
 	token := mqttClient.Connect()
 
-	token.Wait()
+	if token.WaitTimeout(15 * time.Second) {
 
-	if token.Error() != nil {
-		panic(token.Error())
+		if token.Error() != nil {
+
+			fmt.Println("❌ MQTT Connect Error:", token.Error())
+			return
+		}
+
+	} else {
+
+		fmt.Println("❌ MQTT Connection Timeout")
+		return
 	}
 }
 
 // ============================================================
-// SUBSCRIBE
+// SUBSCRIBE TELEMETRY
 // ============================================================
 
 func subscribeTelemetry() {
 
+	if mqttClient == nil {
+
+		fmt.Println("❌ MQTT Client Nil")
+		return
+	}
+
+	if !mqttClient.IsConnected() {
+
+		fmt.Println("❌ MQTT Not Connected")
+		return
+	}
+
 	topic := "/telemetry/+"
+
+	fmt.Println("📡 Subscribing:", topic)
 
 	token := mqttClient.Subscribe(
 		topic,
@@ -170,13 +259,20 @@ func subscribeTelemetry() {
 		messageHandler,
 	)
 
-	token.Wait()
+	if token.WaitTimeout(10 * time.Second) {
 
-	if token.Error() != nil {
-		panic(token.Error())
+		if token.Error() != nil {
+
+			fmt.Println("❌ Subscribe Error:", token.Error())
+			return
+		}
+
+		fmt.Println("✅ Subscribed:", topic)
+
+	} else {
+
+		fmt.Println("❌ Subscribe Timeout")
 	}
-
-	fmt.Println("📡 Subscribed:", topic)
 }
 
 // ============================================================
@@ -196,7 +292,12 @@ func messageHandler(client mqtt.Client, msg mqtt.Message) {
 	if err != nil {
 
 		fmt.Println("❌ JSON Error:", err)
+		return
+	}
 
+	if telemetry.DeviceID == "" {
+
+		fmt.Println("❌ Device ID Missing")
 		return
 	}
 
@@ -215,9 +316,30 @@ func messageHandler(client mqtt.Client, msg mqtt.Message) {
 
 func sendCommand(deviceID string, payload interface{}) {
 
+	if mqttClient == nil {
+
+		fmt.Println("❌ MQTT Client Nil")
+		return
+	}
+
+	if !mqttClient.IsConnected() {
+
+		fmt.Println("❌ MQTT Not Connected")
+		return
+	}
+
 	topic := "/cmd/" + deviceID
 
-	jsonPayload, _ := json.Marshal(payload)
+	jsonPayload, err := json.Marshal(payload)
+
+	if err != nil {
+
+		fmt.Println("❌ JSON Marshal Error:", err)
+		return
+	}
+
+	fmt.Println("📤 Publishing To:", topic)
+	fmt.Println("Payload:", string(jsonPayload))
 
 	token := mqttClient.Publish(
 		topic,
@@ -226,17 +348,20 @@ func sendCommand(deviceID string, payload interface{}) {
 		jsonPayload,
 	)
 
-	token.Wait()
+	if token.WaitTimeout(10 * time.Second) {
 
-	if token.Error() != nil {
+		if token.Error() != nil {
 
-		fmt.Println("❌ Publish Error:", token.Error())
+			fmt.Println("❌ Publish Error:", token.Error())
+			return
+		}
 
-		return
+		fmt.Println("✅ Command Sent")
+
+	} else {
+
+		fmt.Println("❌ Publish Timeout")
 	}
-
-	fmt.Println("📤 Command Sent")
-	fmt.Println(string(jsonPayload))
 }
 
 // ============================================================
@@ -249,9 +374,9 @@ func getDeviceStatus(c *fiber.Ctx) error {
 
 	mutex.Lock()
 
-	defer mutex.Unlock()
-
 	data, ok := deviceTelemetry[deviceID]
+
+	mutex.Unlock()
 
 	if !ok {
 
@@ -407,7 +532,9 @@ func setTempThreshold(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&body); err != nil {
 
-		return err
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
 	}
 
 	payload := fiber.Map{
@@ -438,7 +565,9 @@ func setHumThreshold(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&body); err != nil {
 
-		return err
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
 	}
 
 	payload := fiber.Map{
@@ -469,7 +598,9 @@ func setFanCycle(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&body); err != nil {
 
-		return err
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
 	}
 
 	payload := fiber.Map{
