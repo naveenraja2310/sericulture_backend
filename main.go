@@ -7,6 +7,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 // ============================================================
@@ -58,12 +59,12 @@ func main() {
 
 	app := fiber.New()
 
-	// app.Use(cors.New(cors.Config{
-	// 	AllowOrigins:     "http://localhost:5173",
-	// 	AllowMethods:     "GET,POST,OPTIONS",
-	// 	AllowHeaders:     "Origin, Content-Type, Accept",
-	// 	AllowCredentials: true,
-	// }))
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "*",
+		AllowMethods:     "GET,POST,OPTIONS",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowCredentials: true,
+	}))
 
 	// ========================================================
 	// HEALTH
