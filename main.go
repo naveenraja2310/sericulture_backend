@@ -63,7 +63,7 @@ func main() {
 		AllowOrigins:     "*",
 		AllowMethods:     "GET,POST,OPTIONS",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowCredentials: true,
+		AllowCredentials: false,
 	}))
 
 	// ========================================================
