@@ -9,6 +9,8 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	websocket "github.com/gofiber/websocket/v2"
 )
 
@@ -75,6 +77,8 @@ func main() {
 		AllowCredentials: false,
 	}))
 
+	app.Use(logger.New())
+	app.Use(recover.New())
 	// ========================================================
 	// HEALTH
 	// ========================================================
