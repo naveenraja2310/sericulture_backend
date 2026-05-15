@@ -47,6 +47,11 @@ type Telemetry struct {
 // GLOBALS
 // ============================================================
 
+type wsClient struct {
+	conn *websocket.Conn
+	mu   sync.Mutex
+}
+
 var (
 	mqttClient mqtt.Client
 
@@ -55,7 +60,7 @@ var (
 	deviceTelemetry = map[string]Telemetry{}
 
 	subscriptionReady = make(chan bool, 1)
-	deviceClients     = map[string]map[*websocket.Conn]bool{}
+	deviceClients     = map[string]map[*websocket.Conn]*wsClient{}
 )
 
 // ============================================================
@@ -339,16 +344,18 @@ func messageHandler(client mqtt.Client, msg mqtt.Message) {
 	// Broadcast telemetry update to any connected websocket clients
 	mutex.Lock()
 	conns := deviceClients[telemetry.DeviceID]
-	var clients []*websocket.Conn
-	for c := range conns {
-		clients = append(clients, c)
+	var clients []*wsClient
+	for _, client := range conns {
+		clients = append(clients, client)
 	}
 	mutex.Unlock()
 
-	for _, c := range clients {
-		if err := c.WriteJSON(telemetry); err != nil {
+	for _, client := range clients {
+		client.mu.Lock()
+		if err := client.conn.WriteJSON(telemetry); err != nil {
 			fmt.Println("❌ WebSocket Write Error:", err)
 		}
+		client.mu.Unlock()
 	}
 }
 
@@ -443,18 +450,23 @@ func deviceStatusWS(c *websocket.Conn) {
 		return
 	}
 
+	client := &wsClient{conn: c}
+
 	// Register client
 	mutex.Lock()
 	if deviceClients[deviceID] == nil {
-		deviceClients[deviceID] = make(map[*websocket.Conn]bool)
+		deviceClients[deviceID] = make(map[*websocket.Conn]*wsClient)
 	}
-	deviceClients[deviceID][c] = true
+	deviceClients[deviceID][c] = client
+	data, ok := deviceTelemetry[deviceID]
+	mutex.Unlock()
 
 	// Send initial status if available
-	if data, ok := deviceTelemetry[deviceID]; ok {
-		_ = c.WriteJSON(data)
+	if ok {
+		client.mu.Lock()
+		_ = client.conn.WriteJSON(data)
+		client.mu.Unlock()
 	}
-	mutex.Unlock()
 
 	// Keep connection open; read messages so TCP stays alive
 	for {
