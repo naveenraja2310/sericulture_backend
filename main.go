@@ -421,20 +421,18 @@ func getDeviceStatus(c *fiber.Ctx) error {
 
 	deviceID := c.Params("id")
 
+	// delete cached telemetry to force device to send fresh status via MQTT
 	mutex.Lock()
-
-	data, ok := deviceTelemetry[deviceID]
-
+	delete(deviceTelemetry, deviceID)
 	mutex.Unlock()
 
-	if !ok {
-
-		return c.Status(404).JSON(fiber.Map{
-			"error": "device not found",
-		})
+	payload := fiber.Map{
+		"method": "getStatus",
 	}
 
-	return c.JSON(data)
+	sendCommand(deviceID, payload)
+
+	return c.JSON(Telemetry{})
 }
 
 // ============================================================
