@@ -22,30 +22,38 @@ type WsClient struct {
 var (
 	// deviceID -> clients
 	DeviceClients = map[string]map[*WsClient]bool{}
-
-	Mutex sync.RWMutex
-
-	MqttClient mqtt.Client
+	Mutex         sync.RWMutex
+	MqttClient    mqtt.Client
 )
 
 func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Telemetry, error) {
 
 	updateFields := bson.M{
-		"updatedAt":     time.Now(),
-		"temperature":   telemetry.Temperature,
-		"humidity":      telemetry.Humidity,
-		"motor":         telemetry.Motor,
-		"fan":           telemetry.Fan,
-		"heater":        telemetry.Heater,
-		"spare":         telemetry.Spare,
+		"temperature": telemetry.Temperature,
+		"humidity":    telemetry.Humidity,
+		"motor":       telemetry.Motor,
+		"fan":         telemetry.Fan,
+		"heater":      telemetry.Heater,
+		"spare":       telemetry.Spare,
+
+		"gprsStatus": telemetry.GprsStatus,
+		"deviceId":   telemetry.DeviceID,
+		"uptime":     telemetry.Uptime,
+		"powerOn":    telemetry.PowerOn,
+
 		"mode":          telemetry.Mode,
 		"tempThreshold": telemetry.TempThreshold,
 		"humThreshold":  telemetry.HumThreshold,
 		"fanCycleTime":  telemetry.FanCycleTime,
-		"uptime":        telemetry.Uptime,
-		"gprsStatus":    telemetry.GprsStatus,
-		"deviceId":      telemetry.DeviceID,
-		"powerOn":       telemetry.PowerOn,
+
+		"activeStage":         telemetry.ActiveStage,
+		"stageTemp":           telemetry.StageTemp,
+		"stageHum":            telemetry.StageHum,
+		"stageElapsedHours":   telemetry.StageElapsedHours,
+		"stageRemainingHours": telemetry.StageRemainingHours,
+		"stageSettings":       telemetry.StageSettings,
+
+		"updatedAt": time.Now(),
 	}
 
 	update := bson.M{
@@ -93,15 +101,11 @@ func BroadcastTelemetry(deviceID string, telemetry interface{}) {
 }
 
 func GetTelemetry(ctx context.Context, deviceID string) (*model.Telemetry, error) {
-
 	var telemetry model.Telemetry
-
 	err := database.Telemetry.FindOne(ctx, bson.M{"deviceId": deviceID}).Decode(&telemetry)
-
 	if err != nil {
 		return nil, err
 	}
-
 	return &telemetry, nil
 }
 

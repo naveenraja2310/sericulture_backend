@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sericulture/database"
+	"sericulture/model"
 	"sericulture/mqtt"
 	"sericulture/service"
 	"time"
@@ -388,5 +389,63 @@ func SetFanCycle(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "fan cycle updated",
+	})
+}
+
+// Update stage settings
+
+func SetStageSettings(c *fiber.Ctx) error {
+
+	deviceID := c.Params("id")
+
+	var body []model.StageSettings
+
+	if err := c.BodyParser(&body); err != nil {
+
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	payload := fiber.Map{
+		"method": "setStageSettings",
+		"params": body,
+	}
+
+	mqtt.SendCommand(deviceID, payload)
+
+	return c.JSON(fiber.Map{
+		"message": "stage settings updated",
+	})
+}
+
+// Set Stage
+
+type SetStageRequest struct {
+	Stage int `json:"stage"`
+}
+
+func SetStage(c *fiber.Ctx) error {
+
+	deviceID := c.Params("id")
+
+	var body SetStageRequest
+
+	if err := c.BodyParser(&body); err != nil {
+
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	payload := fiber.Map{
+		"method": "setStage",
+		"params": body.Stage,
+	}
+
+	mqtt.SendCommand(deviceID, payload)
+
+	return c.JSON(fiber.Map{
+		"message": "stage updated",
 	})
 }

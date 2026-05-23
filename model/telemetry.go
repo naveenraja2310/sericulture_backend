@@ -7,29 +7,40 @@ import (
 )
 
 type Telemetry struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Temperature float64            `json:"temperature"`
-	Humidity    float64            `json:"humidity"`
+	ID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 
-	Motor  int `json:"motor"`
-	Fan    int `json:"fan"`
-	Heater int `json:"heater"`
-	Spare  int `json:"spare"`
+	// Sensor readings
+	Temperature float64 `json:"temperature" bson:"temperature"`
+	Humidity    float64 `json:"humidity" bson:"humidity"`
+	Motor       int     `json:"motor" bson:"motor"`
+	Fan         int     `json:"fan" bson:"fan"`
+	Heater      int     `json:"heater" bson:"heater"`
+	Spare       int     `json:"spare" bson:"spare"`
 
-	Mode string `json:"mode"`
+	// Device status
+	GprsStatus string `json:"gprsStatus" bson:"gprsStatus"`
+	DeviceID   string `json:"deviceId" bson:"deviceId"`
+	Uptime     int    `json:"uptime" bson:"uptime"`
+	PowerOn    int    `json:"powerOn" bson:"powerOn"`
 
-	TempThreshold float64 `json:"tempThreshold"`
-	HumThreshold  float64 `json:"humThreshold"`
+	// Mode configuration
+	Mode          string  `json:"mode" bson:"mode"`
+	TempThreshold float64 `json:"tempThreshold" bson:"tempThreshold"`
+	HumThreshold  float64 `json:"humThreshold" bson:"humThreshold"`
+	FanCycleTime  int     `json:"fanCycleTime" bson:"fanCycleTime"`
 
-	FanCycleTime int `json:"fanCycleTime"`
+	// Stage information
+	ActiveStage         int             `json:"activeStage" bson:"activeStage"`
+	StageTemp           float64         `json:"stageTemp" bson:"stageTemp"`
+	StageHum            float64         `json:"stageHum" bson:"stageHum"`
+	StageElapsedHours   int             `json:"stageElapsedHours" bson:"stageElapsedHours"`
+	StageRemainingHours int             `json:"stageRemainingHours" bson:"stageRemainingHours"`
+	StageSettings       []StageSettings `json:"stageSettings" bson:"stageSettings"`
+	UpdatedAt           time.Time       `json:"updatedAt" bson:"updatedAt"`
+}
 
-	Uptime int `json:"uptime"`
-
-	GprsStatus string `json:"gprsStatus"`
-
-	DeviceID string `json:"deviceId"`
-
-	PowerOn int `json:"powerOn"`
-
-	UpdatedAt time.Time `json:"updatedAt"`
+type StageSettings struct {
+	TempSetpoint  float64 `json:"tempSetpoint" bson:"tempSetpoint"`
+	HumSetpoint   float64 `json:"humSetpoint" bson:"humSetpoint"`
+	DurationHours int     `json:"durationHours" bson:"durationHours"`
 }
