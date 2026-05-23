@@ -75,21 +75,33 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 // Broadcast telemetry to all websocket clients of a device
 func BroadcastTelemetry(deviceID string, telemetry interface{}) {
 
+	// Copy current clients under read lock to avoid concurrent map access
 	Mutex.RLock()
-	clients := DeviceClients[deviceID]
+	clientsMap := DeviceClients[deviceID]
+	if clientsMap == nil {
+		Mutex.RUnlock()
+		return
+	}
+
+	clients := make([]*WsClient, 0, len(clientsMap))
+	for c := range clientsMap {
+		clients = append(clients, c)
+	}
 	Mutex.RUnlock()
 
-	for client := range clients {
+	for _, client := range clients {
 		select {
 		case client.Send <- telemetry:
 		default:
-			// Slow/dead client cleanup
+			// Slow/dead client cleanup: take write lock to modify shared map
 			Mutex.Lock()
 
-			delete(DeviceClients[deviceID], client)
-
-			if len(DeviceClients[deviceID]) == 0 {
-				delete(DeviceClients, deviceID)
+			// re-check map exists and client still present
+			if m, ok := DeviceClients[deviceID]; ok {
+				delete(m, client)
+				if len(m) == 0 {
+					delete(DeviceClients, deviceID)
+				}
 			}
 
 			Mutex.Unlock()
