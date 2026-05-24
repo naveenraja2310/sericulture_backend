@@ -51,9 +51,10 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"stageHum":            telemetry.StageHum,
 		"stageElapsedHours":   telemetry.StageElapsedHours,
 		"stageRemainingHours": telemetry.StageRemainingHours,
-		"stageSettings":       telemetry.StageSettings,
+		"stages":              telemetry.Stages,
 
-		"updatedAt": time.Now(),
+		"lastTelemetryTimestamp": telemetry.LastTelemetryTimestamp,
+		"updatedAt":              time.Now(),
 	}
 
 	update := bson.M{

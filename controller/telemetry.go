@@ -272,6 +272,13 @@ func SetAutoMode(c *fiber.Ctx) error {
 
 	mqtt.SendCommand(deviceID, payload)
 
+	stagepayload := fiber.Map{
+		"method": "setStage",
+		"params": 0,
+	}
+
+	mqtt.SendCommand(deviceID, stagepayload)
+
 	return c.JSON(fiber.Map{
 		"message": "AUTO mode enabled",
 	})
@@ -287,6 +294,13 @@ func SetManualMode(c *fiber.Ctx) error {
 	}
 
 	mqtt.SendCommand(deviceID, payload)
+
+	stagepayload := fiber.Map{
+		"method": "setStage",
+		"params": 0,
+	}
+
+	mqtt.SendCommand(deviceID, stagepayload)
 
 	return c.JSON(fiber.Map{
 		"message": "MANUAL mode enabled",
@@ -435,6 +449,19 @@ func SetStage(c *fiber.Ctx) error {
 
 		return c.Status(400).JSON(fiber.Map{
 			"error": err.Error(),
+		})
+	}
+
+	if body.Stage == 0 {
+		payload := fiber.Map{
+			"method": "setMode",
+			"params": true,
+		}
+
+		mqtt.SendCommand(deviceID, payload)
+
+		return c.JSON(fiber.Map{
+			"message": "AUTO mode enabled",
 		})
 	}
 

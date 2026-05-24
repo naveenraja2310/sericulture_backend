@@ -30,13 +30,14 @@ type Telemetry struct {
 	FanCycleTime  int     `json:"fanCycleTime" bson:"fanCycleTime"`
 
 	// Stage information
-	ActiveStage         int             `json:"activeStage" bson:"activeStage"`
-	StageTemp           float64         `json:"stageTemp" bson:"stageTemp"`
-	StageHum            float64         `json:"stageHum" bson:"stageHum"`
-	StageElapsedHours   int             `json:"stageElapsedHours" bson:"stageElapsedHours"`
-	StageRemainingHours int             `json:"stageRemainingHours" bson:"stageRemainingHours"`
-	StageSettings       []StageSettings `json:"stageSettings" bson:"stageSettings"`
-	UpdatedAt           time.Time       `json:"updatedAt" bson:"updatedAt"`
+	ActiveStage            int             `json:"activeStage" bson:"activeStage"`
+	StageTemp              float64         `json:"stageTemp" bson:"stageTemp"`
+	StageHum               float64         `json:"stageHum" bson:"stageHum"`
+	StageElapsedHours      int             `json:"stageElapsedHours" bson:"stageElapsedHours"`
+	StageRemainingHours    int             `json:"stageRemainingHours" bson:"stageRemainingHours"`
+	Stages                 []StageSettings `json:"stages" bson:"stages"`
+	LastTelemetryTimestamp int64           `json:"lastTelemetryTimestamp" bson:"lastTelemetryTimestamp"`
+	UpdatedAt              time.Time       `json:"updatedAt" bson:"updatedAt"`
 }
 
 type StageSettings struct {
