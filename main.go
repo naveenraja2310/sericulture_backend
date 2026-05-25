@@ -19,8 +19,6 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	fmt.Println(config)
-
 	if dberr := database.InitDB(config); dberr != nil {
 		log.Fatalf("Failed to initialize database: %v", dberr)
 	}

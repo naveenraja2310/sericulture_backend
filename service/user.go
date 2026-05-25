@@ -124,7 +124,7 @@ func GetAllUsers(ctx context.Context, limit, offset int64, search string) ([]mod
 	var users []model.User
 
 	// Define find options for pagination and sorting
-	filter := bson.M{}
+	filter := bson.M{"isAdmin": false} // Exclude admin users
 
 	if search != "" {
 		filter["$or"] = []bson.M{

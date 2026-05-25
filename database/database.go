@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"log"
 	"sericulture/settings"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,5 +26,7 @@ func InitDB(config settings.Configuration) error {
 
 	Users = client.Database(config.DB_NAME).Collection("users")
 	Telemetry = client.Database(config.DB_NAME).Collection("telemetry")
+
+	log.Println("Database loaded successfully")
 	return nil
 }

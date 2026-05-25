@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"sericulture/model"
 	"sericulture/service"
 	"time"
@@ -60,7 +61,7 @@ func ConnectMQTT(mqttUrl string) {
 
 	opts.OnConnect = func(client mqtt.Client) {
 
-		fmt.Println("✅ MQTT Connected")
+		log.Println("✅ MQTT Connected")
 
 		SubscribeTelemetry()
 	}
@@ -71,7 +72,7 @@ func ConnectMQTT(mqttUrl string) {
 
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 
-		fmt.Println("❌ MQTT Connection Lost:", err)
+		log.Println("❌ MQTT Connection Lost:", err)
 	}
 
 	// ========================================================
@@ -80,7 +81,7 @@ func ConnectMQTT(mqttUrl string) {
 
 	opts.OnReconnecting = func(client mqtt.Client, opts *mqtt.ClientOptions) {
 
-		fmt.Println("🔄 MQTT Reconnecting...")
+		log.Println("🔄 MQTT Reconnecting...")
 	}
 
 	// ========================================================
@@ -93,7 +94,7 @@ func ConnectMQTT(mqttUrl string) {
 	// CONNECT
 	// ========================================================
 
-	fmt.Println("🔌 Connecting MQTT Broker...")
+	log.Println("🔌 Connecting MQTT Broker...")
 
 	token := service.MqttClient.Connect()
 
@@ -101,13 +102,13 @@ func ConnectMQTT(mqttUrl string) {
 
 		if token.Error() != nil {
 
-			fmt.Println("❌ MQTT Connect Error:", token.Error())
+			log.Println("❌ MQTT Connect Error:", token.Error())
 			return
 		}
 
 	} else {
 
-		fmt.Println("❌ MQTT Connection Timeout")
+		log.Println("❌ MQTT Connection Timeout")
 		return
 	}
 }
@@ -120,19 +121,19 @@ func SubscribeTelemetry() {
 
 	if service.MqttClient == nil {
 
-		fmt.Println("❌ MQTT Client Nil")
+		log.Println("❌ MQTT Client Nil")
 		return
 	}
 
 	if !service.MqttClient.IsConnected() {
 
-		fmt.Println("❌ MQTT Not Connected")
+		log.Println("❌ MQTT Not Connected")
 		return
 	}
 
 	topic := "/telemetry/+"
 
-	fmt.Println("📡 Subscribing:", topic)
+	log.Println("📡 Subscribing:", topic)
 
 	token := service.MqttClient.Subscribe(
 		topic,
@@ -144,15 +145,15 @@ func SubscribeTelemetry() {
 
 		if token.Error() != nil {
 
-			fmt.Println("❌ Subscribe Error:", token.Error())
+			log.Println("❌ Subscribe Error:", token.Error())
 			return
 		}
 
-		fmt.Println("✅ Subscribed:", topic)
+		log.Println("✅ Subscribed:", topic)
 
 	} else {
 
-		fmt.Println("❌ Subscribe Timeout")
+		log.Println("❌ Subscribe Timeout")
 	}
 }
 
@@ -162,28 +163,28 @@ func SubscribeTelemetry() {
 
 func MessageHandler(client mqtt.Client, msg mqtt.Message) {
 
-	fmt.Println("\n📨 MQTT Message")
-	fmt.Println("Topic:", msg.Topic())
-	fmt.Println("Payload:", string(msg.Payload()))
+	log.Println("\n📨 MQTT Message")
+	log.Println("Topic:", msg.Topic())
+	log.Println("Payload:", string(msg.Payload()))
 
 	var telemetry model.Telemetry
 
 	err := json.Unmarshal(msg.Payload(), &telemetry)
 
 	if err != nil {
-		fmt.Println("❌ JSON Error:", err)
+		log.Println("❌ JSON Error:", err)
 		return
 	}
 
 	if telemetry.DeviceID == "" {
 
-		fmt.Println("❌ Device ID Missing")
+		log.Println("❌ Device ID Missing")
 		return
 	}
 
 	go service.UpsetTelemetry(context.Background(), telemetry)
 
-	fmt.Println("✅ Telemetry Updated For:", telemetry.DeviceID)
+	log.Println("✅ Telemetry Updated For:", telemetry.DeviceID)
 
 }
 
@@ -195,13 +196,13 @@ func SendCommand(deviceID string, payload interface{}) {
 
 	if service.MqttClient == nil {
 
-		fmt.Println("❌ MQTT Client Nil")
+		log.Println("❌ MQTT Client Nil")
 		return
 	}
 
 	if !service.MqttClient.IsConnected() {
 
-		fmt.Println("❌ MQTT Not Connected")
+		log.Println("❌ MQTT Not Connected")
 		return
 	}
 
@@ -211,12 +212,12 @@ func SendCommand(deviceID string, payload interface{}) {
 
 	if err != nil {
 
-		fmt.Println("❌ JSON Marshal Error:", err)
+		log.Println("❌ JSON Marshal Error:", err)
 		return
 	}
 
-	fmt.Println("📤 Publishing To:", topic)
-	fmt.Println("Payload:", string(jsonPayload))
+	log.Println("📤 Publishing To:", topic)
+	log.Println("Payload:", string(jsonPayload))
 
 	token := service.MqttClient.Publish(
 		topic,
@@ -229,14 +230,14 @@ func SendCommand(deviceID string, payload interface{}) {
 
 		if token.Error() != nil {
 
-			fmt.Println("❌ Publish Error:", token.Error())
+			log.Println("❌ Publish Error:", token.Error())
 			return
 		}
 
-		fmt.Println("✅ Command Sent")
+		log.Println("✅ Command Sent")
 
 	} else {
 
-		fmt.Println("❌ Publish Timeout")
+		log.Println("❌ Publish Timeout")
 	}
 }

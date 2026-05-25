@@ -1,7 +1,7 @@
 package settings
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -61,6 +61,6 @@ func InitConfig() (Configuration, error) {
 		return Config, err
 	}
 
-	fmt.Println("Configuration loaded successfully")
+	log.Println("Configuration loaded successfully")
 	return Config, nil
 }
