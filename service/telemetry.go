@@ -129,3 +129,57 @@ func DeleteTelemetry(ctx context.Context, deviceID string) (*model.Telemetry, er
 	}
 	return &model.Telemetry{}, nil
 }
+
+func GetAllTelemetry(ctx context.Context, limit, offset int64, search string) ([]map[string]interface{}, int64, error) {
+	filter := bson.M{}
+	if search != "" {
+		filter["$or"] = []bson.M{
+			{"deviceId": bson.M{"$regex": search, "$options": "i"}},
+		}
+	}
+
+	// Get total count
+	total, err := database.Telemetry.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Aggregation pipeline with lookup to join user collection
+	pipeline := []bson.M{
+		{"$match": filter},
+		{
+			"$lookup": bson.M{
+				"from":         "users",
+				"localField":   "deviceId",
+				"foreignField": "deviceId",
+				"as":           "userDetails",
+			},
+		},
+		{
+			"$unwind": bson.M{
+				"path":                       "$userDetails",
+				"preserveNullAndEmptyArrays": true,
+			},
+		},
+		{
+			"$addFields": bson.M{
+				"username": "$userDetails.username",
+			},
+		},
+		{"$skip": offset},
+		{"$limit": limit},
+	}
+
+	cursor, err := database.Telemetry.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var telemetries []map[string]interface{}
+	if err = cursor.All(ctx, &telemetries); err != nil {
+		return nil, 0, err
+	}
+
+	return telemetries, total, nil
+}

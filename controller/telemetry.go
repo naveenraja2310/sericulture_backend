@@ -3,10 +3,12 @@ package controller
 import (
 	"context"
 	"log"
+	"net/http"
 	"sericulture/database"
 	"sericulture/model"
 	"sericulture/mqtt"
 	"sericulture/service"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -474,5 +476,53 @@ func SetStage(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "stage updated",
+	})
+}
+
+func GetAllTelemetry(c *fiber.Ctx) error {
+	//creating a context
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(database.ContextTime)*time.Second)
+	defer cancel()
+
+	limit, limiterr := strconv.Atoi(c.Query("limit"))
+	if limiterr != nil {
+		return c.Status(http.StatusBadRequest).JSON(model.ErrorResponse{
+			ApiPath:      c.OriginalURL(),
+			ErrorCode:    http.StatusBadRequest,
+			ErrorMessage: limiterr.Error(),
+			ErrorTime:    time.Now(),
+		})
+	}
+
+	pagenumber, pagenumbererr := strconv.Atoi(c.Query("page"))
+	if pagenumbererr != nil {
+		return c.Status(http.StatusBadRequest).JSON(model.ErrorResponse{
+			ApiPath:      c.OriginalURL(),
+			ErrorCode:    http.StatusBadRequest,
+			ErrorMessage: pagenumbererr.Error(),
+			ErrorTime:    time.Now(),
+		})
+	}
+
+	search := c.Query("search")
+
+	offset := (pagenumber - 1) * limit
+
+	//fetch data from DB
+	result, count, err := service.GetAllTelemetry(ctx, int64(limit), int64(offset), search)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(model.ErrorResponse{
+			ApiPath:      c.OriginalURL(),
+			ErrorCode:    http.StatusInternalServerError,
+			ErrorMessage: err.Error(),
+			ErrorTime:    time.Now(),
+		})
+	}
+
+	// Return a success model
+	return c.Status(http.StatusOK).JSON(model.SuccessResponse{
+		StatusCode:    http.StatusOK,
+		StatusMessage: "success",
+		Data:          &fiber.Map{"telemetry": result, "total_count": count},
 	})
 }
