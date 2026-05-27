@@ -8,6 +8,7 @@ import (
 	"sericulture/model"
 	"sericulture/mqtt"
 	"sericulture/service"
+	"sericulture/utils"
 	"strconv"
 	"time"
 
@@ -99,7 +100,7 @@ func DeviceStatusWS(c *websocket.Conn) {
 		service.Mutex.Unlock()
 		close(client.Send)
 		_ = c.Close()
-		log.Println("❌ WS Disconnected:", deviceID)
+		utils.ErrorLog.Println("❌ WS Disconnected:", deviceID)
 	}()
 
 	// Read limits
@@ -122,7 +123,7 @@ func DeviceStatusWS(c *websocket.Conn) {
 	for {
 		_, _, err := c.ReadMessage()
 		if err != nil {
-			log.Println("❌ WS Error:", err)
+			utils.ErrorLog.Println("❌ WS Error:", err)
 			break
 		}
 	}
@@ -148,7 +149,7 @@ func writePump(client *service.WsClient) {
 			}
 
 			if err := client.Conn.WriteJSON(msg); err != nil {
-				log.Println("❌ WS Error:", err)
+				utils.ErrorLog.Println("❌ WS Error:", err)
 				return
 			}
 

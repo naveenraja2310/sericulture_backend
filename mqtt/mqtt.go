@@ -7,6 +7,7 @@ import (
 	"log"
 	"sericulture/model"
 	"sericulture/service"
+	"sericulture/utils"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -72,7 +73,7 @@ func ConnectMQTT(mqttUrl string) {
 
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 
-		log.Println("❌ MQTT Connection Lost:", err)
+		utils.ErrorLog.Println("❌ MQTT Connection Lost:", err)
 	}
 
 	// ========================================================
@@ -102,13 +103,13 @@ func ConnectMQTT(mqttUrl string) {
 
 		if token.Error() != nil {
 
-			log.Println("❌ MQTT Connect Error:", token.Error())
+			utils.ErrorLog.Println("❌ MQTT Connect Error:", token.Error())
 			return
 		}
 
 	} else {
 
-		log.Println("❌ MQTT Connection Timeout")
+		utils.ErrorLog.Println("❌ MQTT Connection Timeout")
 		return
 	}
 }
@@ -121,13 +122,13 @@ func SubscribeTelemetry() {
 
 	if service.MqttClient == nil {
 
-		log.Println("❌ MQTT Client Nil")
+		utils.ErrorLog.Println("❌ MQTT Client Nil")
 		return
 	}
 
 	if !service.MqttClient.IsConnected() {
 
-		log.Println("❌ MQTT Not Connected")
+		utils.ErrorLog.Println("❌ MQTT Not Connected")
 		return
 	}
 
@@ -145,7 +146,7 @@ func SubscribeTelemetry() {
 
 		if token.Error() != nil {
 
-			log.Println("❌ Subscribe Error:", token.Error())
+			utils.ErrorLog.Println("❌ Subscribe Error:", token.Error())
 			return
 		}
 
@@ -153,7 +154,7 @@ func SubscribeTelemetry() {
 
 	} else {
 
-		log.Println("❌ Subscribe Timeout")
+		utils.ErrorLog.Println("❌ Subscribe Timeout")
 	}
 }
 
@@ -172,13 +173,13 @@ func MessageHandler(client mqtt.Client, msg mqtt.Message) {
 	err := json.Unmarshal(msg.Payload(), &telemetry)
 
 	if err != nil {
-		log.Println("❌ JSON Error:", err)
+		utils.ErrorLog.Println("❌ JSON Error:", err)
 		return
 	}
 
 	if telemetry.DeviceID == "" {
 
-		log.Println("❌ Device ID Missing")
+		utils.ErrorLog.Println("❌ Device ID Missing")
 		return
 	}
 
@@ -196,13 +197,13 @@ func SendCommand(deviceID string, payload interface{}) {
 
 	if service.MqttClient == nil {
 
-		log.Println("❌ MQTT Client Nil")
+		utils.ErrorLog.Println("❌ MQTT Client Nil")
 		return
 	}
 
 	if !service.MqttClient.IsConnected() {
 
-		log.Println("❌ MQTT Not Connected")
+		utils.ErrorLog.Println("❌ MQTT Not Connected")
 		return
 	}
 
@@ -211,8 +212,7 @@ func SendCommand(deviceID string, payload interface{}) {
 	jsonPayload, err := json.Marshal(payload)
 
 	if err != nil {
-
-		log.Println("❌ JSON Marshal Error:", err)
+		utils.ErrorLog.Println("❌ JSON Marshal Error:", err)
 		return
 	}
 
@@ -229,8 +229,7 @@ func SendCommand(deviceID string, payload interface{}) {
 	if token.WaitTimeout(10 * time.Second) {
 
 		if token.Error() != nil {
-
-			log.Println("❌ Publish Error:", token.Error())
+			utils.ErrorLog.Println("❌ Publish Error:", token.Error())
 			return
 		}
 
@@ -238,6 +237,6 @@ func SendCommand(deviceID string, payload interface{}) {
 
 	} else {
 
-		log.Println("❌ Publish Timeout")
+		utils.ErrorLog.Println("❌ Publish Timeout")
 	}
 }

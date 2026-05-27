@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"log"
 	"sericulture/database"
 	"sericulture/model"
+	"sericulture/utils"
 	"sync"
 	"time"
 
@@ -108,7 +108,7 @@ func BroadcastTelemetry(deviceID string, telemetry interface{}) {
 			Mutex.Unlock()
 			close(client.Send)
 			_ = client.Conn.Close()
-			log.Println("❌ Removed slow websocket client")
+			utils.ErrorLog.Println("❌ Removed slow websocket client")
 		}
 	}
 }

@@ -11,16 +11,19 @@ import (
 	"syscall"
 
 	"sericulture/mqtt"
+	"sericulture/utils"
 )
 
 func main() {
+	log.SetOutput(os.Stdout)
+
 	config, err := settings.InitConfig()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		utils.ErrorLog.Fatalf("Failed to load configuration: %v", err)
 	}
 
 	if dberr := database.InitDB(config); dberr != nil {
-		log.Fatalf("Failed to initialize database: %v", dberr)
+		utils.ErrorLog.Fatalf("Failed to initialize database: %v", dberr)
 	}
 
 	mqtt.ConnectMQTT(config.MQTTURL)
@@ -32,7 +35,7 @@ func main() {
 
 	go func() {
 		if err := router.Listen(fmt.Sprintf(":%s", config.AppPort)); err != nil {
-			log.Printf("Failed to start server: %v", err)
+			utils.ErrorLog.Printf("Failed to start server: %v", err)
 		}
 	}()
 
