@@ -33,8 +33,8 @@ type Telemetry struct {
 	ActiveStage            int             `json:"activeStage" bson:"activeStage"`
 	StageTemp              float64         `json:"stageTemp" bson:"stageTemp"`
 	StageHum               float64         `json:"stageHum" bson:"stageHum"`
-	StageElapsedHours      int             `json:"stageElapsedHours" bson:"stageElapsedHours"`
-	StageRemainingHours    int             `json:"stageRemainingHours" bson:"stageRemainingHours"`
+	StageElapsedHours      float64         `json:"stageElapsedHours" bson:"stageElapsedHours"`
+	StageRemainingHours    float64         `json:"stageRemainingHours" bson:"stageRemainingHours"`
 	Stages                 []StageSettings `json:"stages" bson:"stages"`
 	LastTelemetryTimestamp int64           `json:"lastTelemetryTimestamp" bson:"lastTelemetryTimestamp"`
 	UpdatedAt              time.Time       `json:"updatedAt" bson:"updatedAt"`
