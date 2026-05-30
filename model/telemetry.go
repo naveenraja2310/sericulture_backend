@@ -18,10 +18,11 @@ type Telemetry struct {
 	Spare       int     `json:"spare" bson:"spare"`
 
 	// Device status
-	GprsStatus string `json:"gprsStatus" bson:"gprsStatus"`
-	DeviceID   string `json:"deviceId" bson:"deviceId"`
-	Uptime     int    `json:"uptime" bson:"uptime"`
-	PowerOn    int    `json:"powerOn" bson:"powerOn"`
+	GprsStatus    string `json:"gprsStatus" bson:"gprsStatus"`
+	DeviceID      string `json:"deviceId" bson:"deviceId"`
+	Uptime        int    `json:"uptime" bson:"uptime"`
+	PowerOn       int    `json:"powerOn" bson:"powerOn"`
+	SensorFailure bool   `json:"sensorFailure" bson:"sensorFailure"`
 
 	// Mode configuration
 	Mode          string  `json:"mode" bson:"mode"`

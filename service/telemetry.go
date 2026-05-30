@@ -36,10 +36,11 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"heater":      telemetry.Heater,
 		"spare":       telemetry.Spare,
 
-		"gprsStatus": telemetry.GprsStatus,
-		"deviceId":   telemetry.DeviceID,
-		"uptime":     telemetry.Uptime,
-		"powerOn":    telemetry.PowerOn,
+		"gprsStatus":    telemetry.GprsStatus,
+		"deviceId":      telemetry.DeviceID,
+		"uptime":        telemetry.Uptime,
+		"powerOn":       telemetry.PowerOn,
+		"sensorFailure": telemetry.SensorFailure,
 
 		"mode":          telemetry.Mode,
 		"tempThreshold": telemetry.TempThreshold,
