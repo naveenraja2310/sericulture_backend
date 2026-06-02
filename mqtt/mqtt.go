@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sericulture/firebase"
 	"sericulture/model"
 	"sericulture/service"
 	"sericulture/utils"
 	"time"
 
+	"firebase.google.com/go/messaging"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -65,6 +67,7 @@ func ConnectMQTT(mqttUrl string) {
 		log.Println("✅ MQTT Connected")
 
 		SubscribeTelemetry()
+		SubscribeNotification()
 	}
 
 	// ========================================================
@@ -158,6 +161,46 @@ func SubscribeTelemetry() {
 	}
 }
 
+func SubscribeNotification() {
+
+	if service.MqttClient == nil {
+
+		utils.ErrorLog.Println("❌ MQTT Client Nil")
+		return
+	}
+
+	if !service.MqttClient.IsConnected() {
+
+		utils.ErrorLog.Println("❌ MQTT Not Connected")
+		return
+	}
+
+	topic := "/notification/+"
+
+	log.Println("📡 Subscribing:", topic)
+
+	token := service.MqttClient.Subscribe(
+		topic,
+		0,
+		NotificationHandler,
+	)
+
+	if token.WaitTimeout(10 * time.Second) {
+
+		if token.Error() != nil {
+
+			utils.ErrorLog.Println("❌ Subscribe Error:", token.Error())
+			return
+		}
+
+		log.Println("✅ Subscribed:", topic)
+
+	} else {
+
+		utils.ErrorLog.Println("❌ Subscribe Timeout")
+	}
+}
+
 // ============================================================
 // MQTT MESSAGE HANDLER
 // ============================================================
@@ -187,6 +230,31 @@ func MessageHandler(client mqtt.Client, msg mqtt.Message) {
 
 	log.Println("✅ Telemetry Updated For:", telemetry.DeviceID)
 
+}
+
+func NotificationHandler(client mqtt.Client, msg mqtt.Message) {
+
+	log.Println("\n📨 MQTT Notification")
+	log.Println("Topic:", msg.Topic())
+	log.Println("Payload:", string(msg.Payload()))
+
+	var notification model.Notification
+
+	err := json.Unmarshal(msg.Payload(), &notification)
+
+	if err != nil {
+		utils.ErrorLog.Println("❌ JSON Error:", err)
+		return
+	}
+
+	if notification.DeviceID == "" {
+		utils.ErrorLog.Println("❌ Device ID Missing")
+		return
+	}
+
+	go sendNotification(notification)
+
+	log.Println("✅ Telemetry Updated For:", notification)
 }
 
 // ============================================================
@@ -239,4 +307,57 @@ func SendCommand(deviceID string, payload interface{}) {
 
 		utils.ErrorLog.Println("❌ Publish Timeout")
 	}
+}
+
+func sendNotification(notification model.Notification) {
+	log.Printf("🔔 New Notification: Type=%s, DeviceID=%s, Timestamp=%d\n",
+		notification.Type, notification.DeviceID, notification.Timestamp)
+
+	user, err := service.GetUserByDeviceID(context.Background(), notification.DeviceID)
+	if err != nil {
+		utils.ErrorLog.Println("❌ Error fetching user:", err)
+		return
+	}
+
+	log.Printf("🔔 Notification for User: %s (%s)\n", user.Username, user.DeviceID)
+
+	if user.FcmToken == "" {
+		utils.ErrorLog.Println("❌ User has no FCM token:", user.Username)
+		return
+	}
+
+	err = sendFirebaseNotification(user.FcmToken, notification)
+	if err != nil {
+		utils.ErrorLog.Println("❌ Error sending Firebase notification:", err)
+		return
+	}
+}
+
+func sendFirebaseNotification(token string, notification model.Notification) error {
+
+	client, err := firebase.FirebaseClient.Messaging(context.Background())
+	if err != nil {
+		return err
+	}
+
+	// Send data-only message to avoid FCM/browser showing the notification
+	// automatically and causing duplicates. The client (page or service
+	// worker) will read these fields and display a single notification.
+	message := &messaging.Message{
+		Token: token,
+		Data: map[string]string{
+			"title": "Sericulture Alert",
+			"body":  notification.Type,
+			"url":   "/dashboard",
+		},
+	}
+
+	response, err := client.Send(context.Background(), message)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Successfully sent:", response)
+
+	return nil
 }

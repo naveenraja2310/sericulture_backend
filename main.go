@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"sericulture/database"
+	"sericulture/firebase"
 	"sericulture/router"
 	"sericulture/settings"
 	"syscall"
@@ -25,6 +26,8 @@ func main() {
 	if dberr := database.InitDB(config); dberr != nil {
 		utils.ErrorLog.Fatalf("Failed to initialize database: %v", dberr)
 	}
+
+	firebase.InitFirebase()
 
 	mqtt.ConnectMQTT(config.MQTTURL)
 

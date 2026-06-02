@@ -115,6 +115,17 @@ func GetUserByID(ctx context.Context, id primitive.ObjectID) (*model.User, error
 	return &user, nil
 }
 
+func GetUserByDeviceID(ctx context.Context, deviceID string) (*model.User, error) {
+	var user model.User
+
+	err := database.Users.FindOne(ctx, bson.M{"deviceId": deviceID}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func DeleteUser(ctx context.Context, id primitive.ObjectID) error {
 	if !utils.CheckIfExistsByID(ctx, database.Users, id) {
 		return errors.New("the given id is invalid")
