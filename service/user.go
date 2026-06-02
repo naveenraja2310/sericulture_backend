@@ -44,6 +44,7 @@ func UpdateUser(ctx context.Context, user model.User, id primitive.ObjectID) (*m
 	updateFields["username"] = user.Username
 	updateFields["password"] = user.Password
 	updateFields["deviceId"] = user.DeviceID
+	updateFields["fcmToken"] = user.FcmToken
 
 	update := bson.M{"$set": updateFields}
 	result, err := database.Users.UpdateOne(ctx, bson.M{"_id": id}, update)
@@ -73,6 +74,9 @@ func UpdateUserAndDeviceId(ctx context.Context, user model.User, id primitive.Ob
 	}
 	if user.DeviceID != "" {
 		updateFields["deviceId"] = user.DeviceID
+	}
+	if user.FcmToken != "" {
+		updateFields["fcmToken"] = user.FcmToken
 	}
 
 	update := bson.M{"$set": updateFields}

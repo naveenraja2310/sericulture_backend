@@ -11,6 +11,7 @@ type User struct {
 	Username  string             `json:"username" bson:"username"`
 	Password  string             `json:"password" bson:"password"`
 	DeviceID  string             `json:"deviceId" bson:"deviceId"`
+	FcmToken  string             `json:"fcmToken" bson:"fcmToken"`
 	IsAdmin   bool               `json:"isAdmin" bson:"isAdmin"`
 	CreatedAt time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt"`
