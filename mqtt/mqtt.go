@@ -347,7 +347,7 @@ func sendFirebaseNotification(token string, notification model.Notification) err
 		Token: token,
 		Data: map[string]string{
 			"title": notification.Title,
-			"body":  notification.Message,
+			"body":  notification.Body,
 			"url":   "/dashboard",
 		},
 	}
