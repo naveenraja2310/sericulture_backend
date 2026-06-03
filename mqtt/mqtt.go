@@ -346,8 +346,8 @@ func sendFirebaseNotification(token string, notification model.Notification) err
 	message := &messaging.Message{
 		Token: token,
 		Data: map[string]string{
-			"title": "Sericulture Alert",
-			"body":  notification.Type,
+			"title": notification.Title,
+			"body":  notification.Message,
 			"url":   "/dashboard",
 		},
 	}
