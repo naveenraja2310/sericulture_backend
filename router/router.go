@@ -67,6 +67,8 @@ func GetRouter() *fiber.App {
 	app.Get("/users", controller.GetAllUsers)
 	app.Get("/user/:id", controller.GetUserById)
 
+	app.Get("/notification", controller.GetAllNotification)
+
 	app.Post("/login", controller.Login)
 
 	return app

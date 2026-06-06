@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sericulture/database"
 	"sericulture/firebase"
 	"sericulture/model"
 	"sericulture/service"
@@ -313,6 +314,8 @@ func sendNotification(notification model.Notification) {
 	log.Printf("🔔 New Notification: Type=%s, DeviceID=%s, Timestamp=%d\n",
 		notification.Type, notification.DeviceID, notification.Timestamp)
 
+	go saveNotification(notification)
+
 	user, err := service.GetUserByDeviceID(context.Background(), notification.DeviceID)
 	if err != nil {
 		utils.ErrorLog.Println("❌ Error fetching user:", err)
@@ -360,4 +363,14 @@ func sendFirebaseNotification(token string, notification model.Notification) err
 	fmt.Println("Successfully sent:", response)
 
 	return nil
+}
+
+func saveNotification(notification model.Notification) {
+	notification.CreatedAt = time.Now()
+
+	_, err := database.Notification.InsertOne(context.Background(), notification)
+	if err != nil {
+		utils.ErrorLog.Println("❌ Error saving notification:", err)
+		return
+	}
 }

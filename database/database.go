@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	MongoClient      *mongo.Client
-	Users, Telemetry *mongo.Collection
-	ContextTime      int = 10
+	MongoClient                    *mongo.Client
+	Users, Telemetry, Notification *mongo.Collection
+	ContextTime                    int = 10
 )
 
 func InitDB(config settings.Configuration) error {
@@ -26,6 +26,7 @@ func InitDB(config settings.Configuration) error {
 
 	Users = client.Database(config.DB_NAME).Collection("users")
 	Telemetry = client.Database(config.DB_NAME).Collection("telemetry")
+	Notification = client.Database(config.DB_NAME).Collection("notification")
 
 	log.Println("Database loaded successfully")
 	return nil
