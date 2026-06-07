@@ -329,14 +329,14 @@ func sendNotification(notification model.Notification) {
 		return
 	}
 
-	err = sendFirebaseNotification(user.FcmToken, notification)
+	err = SendFirebaseNotification(user.FcmToken, notification)
 	if err != nil {
 		utils.ErrorLog.Println("❌ Error sending Firebase notification:", err)
 		return
 	}
 }
 
-func sendFirebaseNotification(token string, notification model.Notification) error {
+func SendFirebaseNotification(token string, notification model.Notification) error {
 
 	client, err := firebase.FirebaseClient.Messaging(context.Background())
 	if err != nil {
@@ -346,12 +346,20 @@ func sendFirebaseNotification(token string, notification model.Notification) err
 	// Send data-only message to avoid FCM/browser showing the notification
 	// automatically and causing duplicates. The client (page or service
 	// worker) will read these fields and display a single notification.
+	// message := &messaging.Message{
+	// 	Token: token,
+	// 	Data: map[string]string{
+	// 		"title": notification.Title,
+	// 		"body":  notification.Body,
+	// 		"url":   "/dashboard",
+	// 	},
+	// }
+
 	message := &messaging.Message{
 		Token: token,
-		Data: map[string]string{
-			"title": notification.Title,
-			"body":  notification.Body,
-			"url":   "/dashboard",
+		Notification: &messaging.Notification{
+			Title: notification.Title,
+			Body:  notification.Body,
 		},
 	}
 
