@@ -365,10 +365,11 @@ func SendFirebaseNotification(token string, notification model.Notification) err
 
 	response, err := client.Send(context.Background(), message)
 	if err != nil {
+		log.Printf("❌ Error sending notification to token %s: %v\n", token, err)
 		return err
 	}
 
-	fmt.Println("Successfully sent:", response)
+	log.Printf("✅ Successfully sent notification to token %s: %v\n", token, response)
 
 	return nil
 }
