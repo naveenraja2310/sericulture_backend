@@ -25,10 +25,17 @@ type Telemetry struct {
 	SensorFailure bool   `json:"sensorFailure" bson:"sensorFailure"`
 
 	// Mode configuration
-	Mode          string  `json:"mode" bson:"mode"`
-	TempThreshold float64 `json:"tempThreshold" bson:"tempThreshold"`
-	HumThreshold  float64 `json:"humThreshold" bson:"humThreshold"`
-	FanCycleTime  int     `json:"fanCycleTime" bson:"fanCycleTime"`
+	Mode string `json:"mode" bson:"mode"`
+
+	// Thresholds
+	FanTempMin     float64 `json:"fanTempMin" bson:"fanTempMin"`
+	FanTempMax     float64 `json:"fanTempMax" bson:"fanTempMax"`
+	MotorHumMin    float64 `json:"motorHumMin" bson:"motorHumMin"`
+	MotorHumMax    float64 `json:"motorHumMax" bson:"motorHumMax"`
+	HeaterTempMin  float64 `json:"heaterTempMin" bson:"heaterTempMin"`
+	HeaterTempMax  float64 `json:"heaterTempMax" bson:"heaterTempMax"`
+	FanOnDuration  float64 `json:"fanOnDuration" bson:"fanOnDuration"`
+	FanOffDuration float64 `json:"fanOffDuration" bson:"fanOffDuration"`
 
 	// Stage information
 	ActiveStage            int             `json:"activeStage" bson:"activeStage"`
@@ -38,6 +45,7 @@ type Telemetry struct {
 	StageRemainingHours    float64         `json:"stageRemainingHours" bson:"stageRemainingHours"`
 	Stages                 []StageSettings `json:"stages" bson:"stages"`
 	LastTelemetryTimestamp int64           `json:"lastTelemetryTimestamp" bson:"lastTelemetryTimestamp"`
+	ProductionCompleted    bool            `json:"productionCompleted" bson:"productionCompleted"`
 	UpdatedAt              time.Time       `json:"updatedAt" bson:"updatedAt"`
 }
 

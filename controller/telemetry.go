@@ -314,15 +314,16 @@ func SetManualMode(c *fiber.Ctx) error {
 // TEMP THRESHOLD
 // ============================================================
 
-type TempThresholdRequest struct {
-	Value float64 `json:"value"`
+type ThresholdRequest struct {
+	Method string  `json:"method"`
+	Value  float64 `json:"value"`
 }
 
-func SetTempThreshold(c *fiber.Ctx) error {
+func SetThreshold(c *fiber.Ctx) error {
 
 	deviceID := c.Params("id")
 
-	var body TempThresholdRequest
+	var body ThresholdRequest
 
 	if err := c.BodyParser(&body); err != nil {
 
@@ -332,80 +333,14 @@ func SetTempThreshold(c *fiber.Ctx) error {
 	}
 
 	payload := fiber.Map{
-		"method": "setTempThreshold",
+		"method": body.Method,
 		"params": body.Value,
 	}
 
 	mqtt.SendCommand(deviceID, payload)
 
 	return c.JSON(fiber.Map{
-		"message": "temperature threshold updated",
-	})
-}
-
-// ============================================================
-// HUM THRESHOLD
-// ============================================================
-
-type HumThresholdRequest struct {
-	Value float64 `json:"value"`
-}
-
-func SetHumThreshold(c *fiber.Ctx) error {
-
-	deviceID := c.Params("id")
-
-	var body HumThresholdRequest
-
-	if err := c.BodyParser(&body); err != nil {
-
-		return c.Status(400).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	payload := fiber.Map{
-		"method": "setHumThreshold",
-		"params": body.Value,
-	}
-
-	mqtt.SendCommand(deviceID, payload)
-
-	return c.JSON(fiber.Map{
-		"message": "humidity threshold updated",
-	})
-}
-
-// ============================================================
-// FAN CYCLE
-// ============================================================
-
-type FanCycleRequest struct {
-	Minutes int `json:"minutes"`
-}
-
-func SetFanCycle(c *fiber.Ctx) error {
-
-	deviceID := c.Params("id")
-
-	var body FanCycleRequest
-
-	if err := c.BodyParser(&body); err != nil {
-
-		return c.Status(400).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	payload := fiber.Map{
-		"method": "setFanCycle",
-		"params": body.Minutes,
-	}
-
-	mqtt.SendCommand(deviceID, payload)
-
-	return c.JSON(fiber.Map{
-		"message": "fan cycle updated",
+		"message": "threshold updated",
 	})
 }
 

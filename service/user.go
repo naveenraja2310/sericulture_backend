@@ -20,7 +20,22 @@ func Login(ctx context.Context, username string, password string) (model.User, e
 		return model.User{}, err
 	}
 
+	lastlogin := time.Now()
+	_, err = database.Users.UpdateOne(ctx, bson.M{"_id": user.ID}, bson.M{"$set": bson.M{"lastLogin": lastlogin}})
+	if err != nil {
+		return model.User{}, err
+	}
+
 	return user, nil
+}
+
+func LogOut(ctx context.Context, deviceId string) error {
+	_, err := database.Users.UpdateOne(ctx, bson.M{"deviceId": deviceId}, bson.M{"$set": bson.M{"lastLogout": time.Now(), "fcmToken": ""}})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func CreateUser(ctx context.Context, user model.User) (*model.User, error) {

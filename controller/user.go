@@ -51,6 +51,32 @@ func Login(c *fiber.Ctx) error {
 	})
 }
 
+func LogOut(c *fiber.Ctx) error {
+	//creating a context
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(database.ContextTime)*time.Second)
+	defer cancel()
+
+	deviceId := c.Params("id")
+
+	//fetch data from DB
+	err := service.LogOut(ctx, deviceId)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(model.ErrorResponse{
+			ApiPath:      c.OriginalURL(),
+			ErrorCode:    http.StatusInternalServerError,
+			ErrorMessage: err.Error(),
+			ErrorTime:    time.Now(),
+		})
+	}
+
+	// Return a success model
+	return c.Status(http.StatusOK).JSON(model.SuccessResponse{
+		StatusCode:    http.StatusOK,
+		StatusMessage: "success",
+		Data:          nil,
+	})
+}
+
 func CreateUser(c *fiber.Ctx) error {
 	//creating a context
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(database.ContextTime)*time.Second)

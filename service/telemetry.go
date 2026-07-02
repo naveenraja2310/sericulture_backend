@@ -42,10 +42,16 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"powerOn":       telemetry.PowerOn,
 		"sensorFailure": telemetry.SensorFailure,
 
-		"mode":          telemetry.Mode,
-		"tempThreshold": telemetry.TempThreshold,
-		"humThreshold":  telemetry.HumThreshold,
-		"fanCycleTime":  telemetry.FanCycleTime,
+		"mode": telemetry.Mode,
+
+		"fanTempMin":     telemetry.FanTempMin,
+		"fanTempMax":     telemetry.FanTempMax,
+		"motorHumMin":    telemetry.MotorHumMin,
+		"motorHumMax":    telemetry.MotorHumMax,
+		"heaterTempMin":  telemetry.HeaterTempMin,
+		"heaterTempMax":  telemetry.HeaterTempMax,
+		"fanOnDuration":  telemetry.FanOnDuration,
+		"fanOffDuration": telemetry.FanOffDuration,
 
 		"activeStage":         telemetry.ActiveStage,
 		"stageTemp":           telemetry.StageTemp,
@@ -55,6 +61,7 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"stages":              telemetry.Stages,
 
 		"lastTelemetryTimestamp": telemetry.LastTelemetryTimestamp,
+		"productionCompleted":    telemetry.ProductionCompleted,
 		"updatedAt":              time.Now(),
 	}
 

@@ -54,9 +54,7 @@ func GetRouter() *fiber.App {
 	app.Post("/device/:id/heater/off", controller.HeaterOff)
 	app.Post("/device/:id/mode/auto", controller.SetAutoMode)
 	app.Post("/device/:id/mode/manual", controller.SetManualMode)
-	app.Post("/device/:id/temp-threshold", controller.SetTempThreshold)
-	app.Post("/device/:id/hum-threshold", controller.SetHumThreshold)
-	app.Post("/device/:id/fan-cycle", controller.SetFanCycle)
+	app.Post("/device/:id/threshold", controller.SetThreshold)
 	app.Post("/device/:id/stage-settings", controller.SetStageSettings)
 	app.Post("/device/:id/set-stage", controller.SetStage)
 	app.Get("/get-all-telemetry", controller.GetAllTelemetry)
@@ -70,6 +68,7 @@ func GetRouter() *fiber.App {
 	app.Get("/notification", controller.GetAllNotification)
 
 	app.Post("/login", controller.Login)
+	app.Put("/logout/:id", controller.LogOut)
 
 	return app
 }
