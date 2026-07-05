@@ -53,4 +53,10 @@ type StageSettings struct {
 	TempSetpoint  float64 `json:"tempSetpoint" bson:"tempSetpoint"`
 	HumSetpoint   float64 `json:"humSetpoint" bson:"humSetpoint"`
 	DurationHours int     `json:"durationHours" bson:"durationHours"`
+	FanTempMin    float64 `json:"fanTempMin" bson:"fanTempMin"`
+	FanTempMax    float64 `json:"fanTempMax" bson:"fanTempMax"`
+	MotorHumMin   float64 `json:"motorHumMin" bson:"motorHumMin"`
+	MotorHumMax   float64 `json:"motorHumMax" bson:"motorHumMax"`
+	HeaterTempMin float64 `json:"heaterTempMin" bson:"heaterTempMin"`
+	HeaterTempMax float64 `json:"heaterTempMax" bson:"heaterTempMax"`
 }
