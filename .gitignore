@@ -1,3 +1,4 @@
 .env
 .exe
+.bin
 firebase-service-account.json

@@ -67,6 +67,10 @@ func GetRouter() *fiber.App {
 
 	app.Get("/notification", controller.GetAllNotification)
 
+	app.Post("/upload", controller.UploadFile)
+	app.Get("/file/:filename", controller.GetFile)
+	app.Post("/update-firmware/:device_id", controller.UpdateFirmware)
+
 	app.Post("/login", controller.Login)
 	app.Put("/logout/:id", controller.LogOut)
 
