@@ -32,3 +32,6 @@ The systemd unit file is located at:
 
 - Make sure the service is installed and the unit file is present before using `systemctl`.
 - If the service does not start, inspect the journal logs with `sudo journalctl -u sericulture.service`.
+
+cd /path/to/logs
+python3 -m http.server 4000

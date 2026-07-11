@@ -41,6 +41,7 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"uptime":        telemetry.Uptime,
 		"powerOn":       telemetry.PowerOn,
 		"sensorFailure": telemetry.SensorFailure,
+		"timer":         telemetry.Timer,
 
 		"mode": telemetry.Mode,
 
