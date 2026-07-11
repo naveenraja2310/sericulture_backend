@@ -12,8 +12,9 @@ import (
 )
 
 func getFirmwareDir() (string, error) {
-	uploadDir := filepath.Join(".", "ota", "firmware")
-	absDir, err := filepath.Abs(uploadDir)
+	configuredDir := filepath.Join(os.TempDir(), "sericulture", "firmware")
+
+	absDir, err := filepath.Abs(configuredDir)
 	if err != nil {
 		return "", err
 	}
@@ -33,15 +34,18 @@ func UploadFile(c *fiber.Ctx) error {
 	filename := filepath.Base(file.Filename)
 	uploadDir, err := getFirmwareDir()
 	if err != nil {
-		return err
-	}
-	savePath := filepath.Join(uploadDir, filename)
-	if err := c.SaveFile(file, savePath); err != nil {
-		// Return a success model with the created objectid
 		return c.Status(http.StatusInternalServerError).JSON(model.SuccessResponse{
 			StatusCode:    http.StatusInternalServerError,
 			StatusMessage: "error",
-			Data:          err.Error(),
+			Data:          "unable to access firmware storage: " + err.Error(),
+		})
+	}
+	savePath := filepath.Join(uploadDir, filename)
+	if err := c.SaveFile(file, savePath); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(model.SuccessResponse{
+			StatusCode:    http.StatusInternalServerError,
+			StatusMessage: "error",
+			Data:          "failed to save firmware file: " + err.Error(),
 		})
 	}
 
@@ -67,7 +71,7 @@ func GetFile(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(model.SuccessResponse{
 			StatusCode:    http.StatusInternalServerError,
 			StatusMessage: "error",
-			Data:          err.Error(),
+			Data:          "unable to access firmware storage: " + err.Error(),
 		})
 	}
 
