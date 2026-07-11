@@ -47,6 +47,7 @@ type Telemetry struct {
 	Stages                 []StageSettings `json:"stages" bson:"stages"`
 	LastTelemetryTimestamp int64           `json:"lastTelemetryTimestamp" bson:"lastTelemetryTimestamp"`
 	ProductionCompleted    bool            `json:"productionCompleted" bson:"productionCompleted"`
+	FirmwareVersion        string          `json:"firmwareVersion" bson:"firmwareVersion"`
 	UpdatedAt              time.Time       `json:"updatedAt" bson:"updatedAt"`
 }
 
