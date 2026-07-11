@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -10,6 +13,21 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 )
+
+func getSHA256(filePath string) (string, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	hash := sha256.New()
+	if _, err := io.Copy(hash, f); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
 
 func getFirmwareDir() (string, error) {
 	configuredDir := filepath.Join(os.TempDir(), "sericulture", "firmware")
@@ -25,13 +43,13 @@ func getFirmwareDir() (string, error) {
 }
 
 func UploadFile(c *fiber.Ctx) error {
-	//creating a context
 	file, err := c.FormFile("document")
 	if err != nil {
 		return err
 	}
-	// Sanitize filename to prevent path traversal attacks:
+
 	filename := filepath.Base(file.Filename)
+
 	uploadDir, err := getFirmwareDir()
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(model.SuccessResponse{
@@ -40,7 +58,9 @@ func UploadFile(c *fiber.Ctx) error {
 			Data:          "unable to access firmware storage: " + err.Error(),
 		})
 	}
+
 	savePath := filepath.Join(uploadDir, filename)
+
 	if err := c.SaveFile(file, savePath); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(model.SuccessResponse{
 			StatusCode:    http.StatusInternalServerError,
@@ -49,10 +69,23 @@ func UploadFile(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(http.StatusCreated).JSON(model.SuccessResponse{
-		StatusCode:    http.StatusCreated,
-		StatusMessage: "success",
-		Data:          filename,
+	sha256Hash, err := getSHA256(savePath)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(model.SuccessResponse{
+			StatusCode:    http.StatusInternalServerError,
+			StatusMessage: "error",
+			Data:          "failed to calculate sha256: " + err.Error(),
+		})
+	}
+
+	return c.Status(http.StatusCreated).JSON(fiber.Map{
+		"statusCode":    http.StatusCreated,
+		"statusMessage": "success",
+		"data": fiber.Map{
+			"filename": filename,
+			"size":     file.Size, // Size in bytes
+			"sha256":   sha256Hash,
+		},
 	})
 }
 
