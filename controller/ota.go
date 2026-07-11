@@ -11,6 +11,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func getFirmwareDir() (string, error) {
+	uploadDir := filepath.Join(".", "ota", "firmware")
+	absDir, err := filepath.Abs(uploadDir)
+	if err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(absDir, 0o755); err != nil {
+		return "", err
+	}
+	return absDir, nil
+}
+
 func UploadFile(c *fiber.Ctx) error {
 	//creating a context
 	file, err := c.FormFile("document")
@@ -19,8 +31,8 @@ func UploadFile(c *fiber.Ctx) error {
 	}
 	// Sanitize filename to prevent path traversal attacks:
 	filename := filepath.Base(file.Filename)
-	uploadDir := filepath.Join("ota", "firmware")
-	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+	uploadDir, err := getFirmwareDir()
+	if err != nil {
 		return err
 	}
 	savePath := filepath.Join(uploadDir, filename)
@@ -50,7 +62,16 @@ func GetFile(c *fiber.Ctx) error {
 		})
 	}
 
-	filePath := filepath.Join("ota", "firmware", filename)
+	uploadDir, err := getFirmwareDir()
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(model.SuccessResponse{
+			StatusCode:    http.StatusInternalServerError,
+			StatusMessage: "error",
+			Data:          err.Error(),
+		})
+	}
+
+	filePath := filepath.Join(uploadDir, filename)
 	if _, err := os.Stat(filePath); err != nil {
 		if os.IsNotExist(err) {
 			return c.Status(http.StatusNotFound).JSON(model.SuccessResponse{
