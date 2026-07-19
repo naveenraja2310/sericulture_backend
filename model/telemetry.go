@@ -40,23 +40,24 @@ type Telemetry struct {
 
 	// Stage information
 	ActiveStage            int             `json:"activeStage" bson:"activeStage"`
-	StageTemp              float64         `json:"stageTemp" bson:"stageTemp"`
-	StageHum               float64         `json:"stageHum" bson:"stageHum"`
 	StageElapsedHours      float64         `json:"stageElapsedHours" bson:"stageElapsedHours"`
 	StageRemainingHours    float64         `json:"stageRemainingHours" bson:"stageRemainingHours"`
 	Stages                 []StageSettings `json:"stages" bson:"stages"`
 	LastTelemetryTimestamp int64           `json:"lastTelemetryTimestamp" bson:"lastTelemetryTimestamp"`
 	ProductionCompleted    bool            `json:"productionCompleted" bson:"productionCompleted"`
 	FirmwareVersion        string          `json:"firmwareVersion" bson:"firmwareVersion"`
+	SystemEnabled          bool            `json:"systemEnabled" bson:"systemEnabled"`
 	UpdatedAt              time.Time       `json:"updatedAt" bson:"updatedAt"`
 }
 
 type StageSettings struct {
-	FanTempMin    float64 `json:"fanTempMin" bson:"fanTempMin"`
-	FanTempMax    float64 `json:"fanTempMax" bson:"fanTempMax"`
-	MotorHumMin   float64 `json:"motorHumMin" bson:"motorHumMin"`
-	MotorHumMax   float64 `json:"motorHumMax" bson:"motorHumMax"`
-	HeaterTempMin float64 `json:"heaterTempMin" bson:"heaterTempMin"`
-	HeaterTempMax float64 `json:"heaterTempMax" bson:"heaterTempMax"`
-	DurationHours int     `json:"durationHours" bson:"durationHours"`
+	FanTempMin     float64 `json:"fanTempMin" bson:"fanTempMin"`
+	FanTempMax     float64 `json:"fanTempMax" bson:"fanTempMax"`
+	MotorHumMin    float64 `json:"motorHumMin" bson:"motorHumMin"`
+	MotorHumMax    float64 `json:"motorHumMax" bson:"motorHumMax"`
+	HeaterTempMin  float64 `json:"heaterTempMin" bson:"heaterTempMin"`
+	HeaterTempMax  float64 `json:"heaterTempMax" bson:"heaterTempMax"`
+	DurationHours  int     `json:"durationHours" bson:"durationHours"`
+	FanOnDuration  float64 `json:"fanOnDuration" bson:"fanOnDuration"`   // NEW
+	FanOffDuration float64 `json:"fanOffDuration" bson:"fanOffDuration"` // NEW
 }

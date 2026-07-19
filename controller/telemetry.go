@@ -415,6 +415,35 @@ func SetStage(c *fiber.Ctx) error {
 	})
 }
 
+type SystemEnabledRequest struct {
+	Enabled bool `json:"enabled"`
+}
+
+func SetSystemEnabled(c *fiber.Ctx) error {
+
+	deviceID := c.Params("id")
+
+	var body SystemEnabledRequest
+
+	if err := c.BodyParser(&body); err != nil {
+
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	payload := fiber.Map{
+		"method": "systemEnabled",
+		"params": body.Enabled,
+	}
+
+	mqtt.SendCommand(deviceID, payload)
+
+	return c.JSON(fiber.Map{
+		"message": "system enabled status updated",
+	})
+}
+
 func GetAllTelemetry(c *fiber.Ctx) error {
 	//creating a context
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(database.ContextTime)*time.Second)

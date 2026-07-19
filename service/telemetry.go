@@ -55,14 +55,14 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"fanOffDuration": telemetry.FanOffDuration,
 
 		"activeStage":         telemetry.ActiveStage,
-		"stageTemp":           telemetry.StageTemp,
-		"stageHum":            telemetry.StageHum,
 		"stageElapsedHours":   telemetry.StageElapsedHours,
 		"stageRemainingHours": telemetry.StageRemainingHours,
 		"stages":              telemetry.Stages,
 
 		"lastTelemetryTimestamp": telemetry.LastTelemetryTimestamp,
 		"productionCompleted":    telemetry.ProductionCompleted,
+		"systemEnabled":          telemetry.SystemEnabled,
+		"firmwareVersion":        telemetry.FirmwareVersion,
 		"updatedAt":              time.Now(),
 	}
 

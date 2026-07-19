@@ -57,6 +57,7 @@ func GetRouter() *fiber.App {
 	app.Post("/device/:id/threshold", controller.SetThreshold)
 	app.Post("/device/:id/stage-settings", controller.SetStageSettings)
 	app.Post("/device/:id/set-stage", controller.SetStage)
+	app.Post("/device/:id/system-enabled", controller.SetSystemEnabled)
 	app.Get("/get-all-telemetry", controller.GetAllTelemetry)
 
 	app.Post("/user", controller.CreateUser)
