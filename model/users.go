@@ -7,14 +7,15 @@ import (
 )
 
 type User struct {
-	ID         primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Username   string             `json:"username" bson:"username"`
-	Password   string             `json:"password" bson:"password"`
-	DeviceID   string             `json:"deviceId" bson:"deviceId"`
-	FcmToken   string             `json:"fcmToken" bson:"fcmToken"`
-	IsAdmin    bool               `json:"isAdmin" bson:"isAdmin"`
-	LastLogin  time.Time          `json:"lastLogin" bson:"lastLogin"`
-	LastLogout time.Time          `json:"lastLogout" bson:"lastLogout"`
-	CreatedAt  time.Time          `json:"createdAt" bson:"createdAt"`
-	UpdatedAt  time.Time          `json:"updatedAt" bson:"updatedAt"`
+	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Username     string             `json:"username" bson:"username"`
+	Password     string             `json:"password" bson:"password"`
+	DeviceID     string             `json:"deviceId" bson:"deviceId"`
+	FcmToken     string             `json:"fcmToken" bson:"fcmToken"`
+	IsAdmin      bool               `json:"isAdmin" bson:"isAdmin"`
+	IsSuperAdmin bool               `json:"isSuperAdmin" bson:"isSuperAdmin"`
+	LastLogin    time.Time          `json:"lastLogin" bson:"lastLogin"`
+	LastLogout   time.Time          `json:"lastLogout" bson:"lastLogout"`
+	CreatedAt    time.Time          `json:"createdAt" bson:"createdAt"`
+	UpdatedAt    time.Time          `json:"updatedAt" bson:"updatedAt"`
 }
