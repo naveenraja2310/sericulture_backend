@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"sericulture/database"
 	"sericulture/model"
@@ -75,7 +74,7 @@ func DeviceStatusWS(c *websocket.Conn) {
 
 	service.Mutex.Unlock()
 
-	log.Println("✅ WS Connected:", deviceID)
+	utils.Info(nil, "WebSocket connected", "deviceId", deviceID)
 
 	// Send latest telemetry immediately
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -100,7 +99,7 @@ func DeviceStatusWS(c *websocket.Conn) {
 		service.Mutex.Unlock()
 		close(client.Send)
 		_ = c.Close()
-		utils.ErrorLog.Println("❌ WS Disconnected:", deviceID)
+		utils.Info(nil, "WebSocket disconnected", "deviceId", deviceID)
 	}()
 
 	// Read limits
@@ -123,7 +122,7 @@ func DeviceStatusWS(c *websocket.Conn) {
 	for {
 		_, _, err := c.ReadMessage()
 		if err != nil {
-			utils.ErrorLog.Println("❌ WS Error:", err)
+			utils.Error(nil, "WebSocket read error", "deviceId", deviceID, "error", err.Error())
 			break
 		}
 	}
@@ -149,7 +148,7 @@ func writePump(client *service.WsClient) {
 			}
 
 			if err := client.Conn.WriteJSON(msg); err != nil {
-				utils.ErrorLog.Println("❌ WS Error:", err)
+				utils.Error(nil, "WebSocket write error", "deviceId", client.Conn.Subprotocol(), "error", err.Error())
 				return
 			}
 

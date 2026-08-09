@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"sericulture/router"
 	"sericulture/settings"
 	"syscall"
+	"time"
 
 	"sericulture/mqtt"
 	"sericulture/utils"
@@ -20,11 +22,24 @@ func main() {
 
 	config, err := settings.InitConfig()
 	if err != nil {
-		utils.ErrorLog.Fatalf("Failed to load configuration: %v", err)
+		utils.Error(nil, "Failed to load configuration", "error", err.Error())
+		os.Exit(1)
 	}
 
 	if dberr := database.InitDB(config); dberr != nil {
-		utils.ErrorLog.Fatalf("Failed to initialize database: %v", dberr)
+		utils.Error(nil, "Failed to initialize database", "error", dberr.Error())
+		os.Exit(1)
+	}
+
+	if config.GrafanaInstanceID != "" && config.GrafanaAPIKey != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		provider, grafanaErr := utils.InitGrafanaOTLPLogger(ctx, config.GrafanaInstanceID, config.GrafanaAPIKey)
+		cancel()
+		if grafanaErr != nil {
+			utils.Error(nil, "Failed to initialize Grafana OTLP logger", "error", grafanaErr.Error())
+		} else if provider != nil {
+			utils.Info(nil, "Grafana OTLP logger initialized successfully")
+		}
 	}
 
 	firebase.InitFirebase()
@@ -38,11 +53,11 @@ func main() {
 
 	go func() {
 		if err := router.Listen(fmt.Sprintf(":%s", config.AppPort)); err != nil {
-			utils.ErrorLog.Printf("Failed to start server: %v", err)
+			utils.Error(nil, "Failed to start server", "error", err.Error())
 		}
 	}()
 
 	<-quit
 
-	log.Println("Shutting down server...")
+	utils.Info(nil, "Shutting down server...")
 }

@@ -2,7 +2,7 @@ package firebase
 
 import (
 	"context"
-	"log"
+	"sericulture/utils"
 
 	firebase "firebase.google.com/go"
 
@@ -22,10 +22,10 @@ func InitFirebase() {
 
 	app, err := firebase.NewApp(context.Background(), config, opt)
 	if err != nil {
-		log.Fatal(err)
+		utils.Error(nil, "Failed to initialize Firebase", "error", err.Error())
+		return
 	}
 
 	FirebaseClient = app
-
-	log.Println("Firebase initialized successfully")
+	utils.Info(nil, "Firebase initialized successfully")
 }

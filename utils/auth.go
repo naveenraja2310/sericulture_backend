@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -168,7 +167,7 @@ func JWTMiddleware(c *fiber.Ctx) error {
 
 	user, found := authUserCache.Get(claims.UserID)
 	if !found {
-		log.Printf("User not found in cache, fetching from DB for userID: %s", claims.UserID)
+		Warn(c, "User cache miss; fetching from DB", "userId", claims.UserID)
 		var freshUser model.User
 		if err := database.Users.FindOne(ctx, bson.M{"_id": objectID}).Decode(&freshUser); err != nil {
 			return unauthorizedResponse(c)
@@ -178,10 +177,14 @@ func JWTMiddleware(c *fiber.Ctx) error {
 	}
 
 	if err := ValidateJWT(tokenString, user); err != nil {
+		Warn(c, "JWT validation failed", "userId", claims.UserID, "deviceId", user.DeviceID, "error", err.Error())
 		return unauthorizedResponse(c)
 	}
 
 	c.Locals("user", user)
+	c.Locals("userId", user.ID.Hex())
+	c.Locals("deviceId", user.DeviceID)
+	c.Locals("deviceID", user.DeviceID)
 	return c.Next()
 }
 

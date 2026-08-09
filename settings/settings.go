@@ -11,13 +11,15 @@ import (
 var Config Configuration
 
 type Configuration struct {
-	MQTTURL        string `mapstructure:"MQTT_URL"`
-	DBURI          string `mapstructure:"DB_URI"`
-	DB_NAME        string `mapstructure:"DB_NAME"`
-	DB_TIME        int    `mapstructure:"DB_TIME"`
-	AppPort        string `mapstructure:"APP_PORT"`
-	AllowedDomains string `mapstructure:"ALLOWED_DOMAINS"`
-	JWTSecret      string `mapstructure:"JWT_SECRET"`
+	MQTTURL           string `mapstructure:"MQTT_URL"`
+	DBURI             string `mapstructure:"DB_URI"`
+	DB_NAME           string `mapstructure:"DB_NAME"`
+	DB_TIME           int    `mapstructure:"DB_TIME"`
+	AppPort           string `mapstructure:"APP_PORT"`
+	AllowedDomains    string `mapstructure:"ALLOWED_DOMAINS"`
+	JWTSecret         string `mapstructure:"JWT_SECRET"`
+	GrafanaInstanceID string `mapstructure:"GRAFANA_INSTANCE_ID"`
+	GrafanaAPIKey     string `mapstructure:"GRAFANA_API_KEY"`
 }
 
 func InitConfig() (Configuration, error) {
@@ -48,7 +50,7 @@ func InitConfig() (Configuration, error) {
 
 	// Bind sensitive env variables
 	envVars := []string{
-		"DB_URI", "DB_TIME", "APP_PORT", "DB_NAME", "JWT_SECRET", "ALLOWED_DOMAINS", "MQTT_URL",
+		"DB_URI", "DB_TIME", "APP_PORT", "DB_NAME", "JWT_SECRET", "ALLOWED_DOMAINS", "MQTT_URL", "GRAFANA_INSTANCE_ID", "GRAFANA_API_KEY",
 	}
 
 	for _, envVar := range envVars {

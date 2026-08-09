@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sericulture/database"
 	"sericulture/firebase"
 	"sericulture/model"
@@ -65,7 +64,7 @@ func ConnectMQTT(mqttUrl string) {
 
 	opts.OnConnect = func(client mqtt.Client) {
 
-		log.Println("✅ MQTT Connected")
+		utils.Info(nil, "MQTT connected")
 
 		SubscribeTelemetry()
 		SubscribeNotification()
@@ -77,7 +76,7 @@ func ConnectMQTT(mqttUrl string) {
 
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 
-		utils.ErrorLog.Println("❌ MQTT Connection Lost:", err)
+		utils.Error(nil, "MQTT connection lost", "error", err.Error())
 	}
 
 	// ========================================================
@@ -86,7 +85,7 @@ func ConnectMQTT(mqttUrl string) {
 
 	opts.OnReconnecting = func(client mqtt.Client, opts *mqtt.ClientOptions) {
 
-		log.Println("🔄 MQTT Reconnecting...")
+		utils.Warn(nil, "MQTT reconnecting")
 	}
 
 	// ========================================================
@@ -99,7 +98,7 @@ func ConnectMQTT(mqttUrl string) {
 	// CONNECT
 	// ========================================================
 
-	log.Println("🔌 Connecting MQTT Broker...")
+	utils.Info(nil, "Connecting MQTT broker")
 
 	token := service.MqttClient.Connect()
 
@@ -107,13 +106,13 @@ func ConnectMQTT(mqttUrl string) {
 
 		if token.Error() != nil {
 
-			utils.ErrorLog.Println("❌ MQTT Connect Error:", token.Error())
+			utils.Error(nil, "MQTT connect error", "error", token.Error().Error())
 			return
 		}
 
 	} else {
 
-		utils.ErrorLog.Println("❌ MQTT Connection Timeout")
+		utils.Error(nil, "MQTT connection timeout")
 		return
 	}
 }
@@ -126,19 +125,19 @@ func SubscribeTelemetry() {
 
 	if service.MqttClient == nil {
 
-		utils.ErrorLog.Println("❌ MQTT Client Nil")
+		utils.Error(nil, "MQTT client nil while subscribing telemetry")
 		return
 	}
 
 	if !service.MqttClient.IsConnected() {
 
-		utils.ErrorLog.Println("❌ MQTT Not Connected")
+		utils.Error(nil, "MQTT client not connected while subscribing telemetry")
 		return
 	}
 
 	topic := "/telemetry/+"
 
-	log.Println("📡 Subscribing:", topic)
+	utils.Info(nil, "Subscribing to telemetry topic", "topic", topic)
 
 	token := service.MqttClient.Subscribe(
 		topic,
@@ -149,16 +148,14 @@ func SubscribeTelemetry() {
 	if token.WaitTimeout(10 * time.Second) {
 
 		if token.Error() != nil {
-
-			utils.ErrorLog.Println("❌ Subscribe Error:", token.Error())
+			utils.Error(nil, "Telemetry subscription error", "topic", topic, "error", token.Error().Error())
 			return
 		}
 
-		log.Println("✅ Subscribed:", topic)
+		utils.Info(nil, "Telemetry subscription successful", "topic", topic)
 
 	} else {
-
-		utils.ErrorLog.Println("❌ Subscribe Timeout")
+		utils.Error(nil, "Telemetry subscription timeout", "topic", topic)
 	}
 }
 
@@ -166,19 +163,19 @@ func SubscribeNotification() {
 
 	if service.MqttClient == nil {
 
-		utils.ErrorLog.Println("❌ MQTT Client Nil")
+		utils.Error(nil, "MQTT client nil while subscribing notifications")
 		return
 	}
 
 	if !service.MqttClient.IsConnected() {
 
-		utils.ErrorLog.Println("❌ MQTT Not Connected")
+		utils.Error(nil, "MQTT client not connected while subscribing notifications")
 		return
 	}
 
 	topic := "/notification/+"
 
-	log.Println("📡 Subscribing:", topic)
+	utils.Info(nil, "Subscribing to notification topic", "topic", topic)
 
 	token := service.MqttClient.Subscribe(
 		topic,
@@ -189,16 +186,14 @@ func SubscribeNotification() {
 	if token.WaitTimeout(10 * time.Second) {
 
 		if token.Error() != nil {
-
-			utils.ErrorLog.Println("❌ Subscribe Error:", token.Error())
+			utils.Error(nil, "Notification subscription error", "topic", topic, "error", token.Error().Error())
 			return
 		}
 
-		log.Println("✅ Subscribed:", topic)
+		utils.Info(nil, "Notification subscription successful", "topic", topic)
 
 	} else {
-
-		utils.ErrorLog.Println("❌ Subscribe Timeout")
+		utils.Error(nil, "Notification subscription timeout", "topic", topic)
 	}
 }
 
@@ -208,54 +203,50 @@ func SubscribeNotification() {
 
 func MessageHandler(client mqtt.Client, msg mqtt.Message) {
 
-	log.Println("\n📨 MQTT Message")
-	log.Println("Topic:", msg.Topic())
-	log.Println("Payload:", string(msg.Payload()))
+	utils.Info(nil, "MQTT message received", "topic", msg.Topic(), "payload", string(msg.Payload()))
 
 	var telemetry model.Telemetry
 
 	err := json.Unmarshal(msg.Payload(), &telemetry)
 
 	if err != nil {
-		utils.ErrorLog.Println("❌ JSON Error:", err)
+		utils.Error(nil, "Telemetry JSON parse error", "topic", msg.Topic(), "error", err.Error())
 		return
 	}
 
 	if telemetry.DeviceID == "" {
 
-		utils.ErrorLog.Println("❌ Device ID Missing")
+		utils.Warn(nil, "Telemetry message missing device ID", "topic", msg.Topic())
 		return
 	}
 
 	go service.UpsetTelemetry(context.Background(), telemetry)
 
-	log.Println("✅ Telemetry Updated For:", telemetry.DeviceID)
+	utils.Info(nil, "Telemetry updated", "deviceId", telemetry.DeviceID)
 
 }
 
 func NotificationHandler(client mqtt.Client, msg mqtt.Message) {
 
-	log.Println("\n📨 MQTT Notification")
-	log.Println("Topic:", msg.Topic())
-	log.Println("Payload:", string(msg.Payload()))
+	utils.Info(nil, "MQTT notification received", "topic", msg.Topic(), "payload", string(msg.Payload()))
 
 	var notification model.Notification
 
 	err := json.Unmarshal(msg.Payload(), &notification)
 
 	if err != nil {
-		utils.ErrorLog.Println("❌ JSON Error:", err)
+		utils.Error(nil, "Notification JSON parse error", "topic", msg.Topic(), "error", err.Error())
 		return
 	}
 
 	if notification.DeviceID == "" {
-		utils.ErrorLog.Println("❌ Device ID Missing")
+		utils.Warn(nil, "Notification message missing device ID", "topic", msg.Topic())
 		return
 	}
 
 	go sendNotification(notification)
 
-	log.Println("✅ Telemetry Updated For:", notification)
+	utils.Info(nil, "Notification processed", "deviceId", notification.DeviceID)
 }
 
 // ============================================================
@@ -265,14 +256,12 @@ func NotificationHandler(client mqtt.Client, msg mqtt.Message) {
 func SendCommand(deviceID string, payload interface{}) {
 
 	if service.MqttClient == nil {
-
-		utils.ErrorLog.Println("❌ MQTT Client Nil")
+		utils.Error(nil, "MQTT client nil while sending command", "deviceId", deviceID)
 		return
 	}
 
 	if !service.MqttClient.IsConnected() {
-
-		utils.ErrorLog.Println("❌ MQTT Not Connected")
+		utils.Error(nil, "MQTT not connected while sending command", "deviceId", deviceID)
 		return
 	}
 
@@ -281,12 +270,11 @@ func SendCommand(deviceID string, payload interface{}) {
 	jsonPayload, err := json.Marshal(payload)
 
 	if err != nil {
-		utils.ErrorLog.Println("❌ JSON Marshal Error:", err)
+		utils.Error(nil, "Failed to marshal MQTT command payload", "deviceId", deviceID, "error", err.Error())
 		return
 	}
 
-	log.Println("📤 Publishing To:", topic)
-	log.Println("Payload:", string(jsonPayload))
+	utils.Info(nil, "Publishing MQTT command", "topic", topic, "payload", string(jsonPayload), "deviceId", deviceID)
 
 	token := service.MqttClient.Publish(
 		topic,
@@ -298,40 +286,39 @@ func SendCommand(deviceID string, payload interface{}) {
 	if token.WaitTimeout(10 * time.Second) {
 
 		if token.Error() != nil {
-			utils.ErrorLog.Println("❌ Publish Error:", token.Error())
+			utils.Error(nil, "MQTT publish error", "topic", topic, "deviceId", deviceID, "error", token.Error().Error())
 			return
 		}
 
-		log.Println("✅ Command Sent")
+		utils.Info(nil, "MQTT command sent", "topic", topic, "deviceId", deviceID)
 
 	} else {
 
-		utils.ErrorLog.Println("❌ Publish Timeout")
+		utils.Error(nil, "MQTT publish timeout", "topic", topic, "deviceId", deviceID)
 	}
 }
 
 func sendNotification(notification model.Notification) {
-	log.Printf("🔔 New Notification: Type=%s, DeviceID=%s, Timestamp=%d\n",
-		notification.Type, notification.DeviceID, notification.Timestamp)
+	utils.Info(nil, "New notification received", "deviceId", notification.DeviceID, "type", notification.Type, "timestamp", notification.Timestamp)
 
 	go saveNotification(notification)
 
 	user, err := service.GetUserByDeviceID(context.Background(), notification.DeviceID)
 	if err != nil {
-		utils.ErrorLog.Println("❌ Error fetching user:", err)
+		utils.Error(nil, "Failed to fetch user for notification", "deviceId", notification.DeviceID, "error", err.Error())
 		return
 	}
 
-	log.Printf("🔔 Notification for User: %s (%s)\n", user.Username, user.DeviceID)
+	utils.Info(nil, "Notification targeted for user", "userId", user.ID.Hex(), "deviceId", user.DeviceID, "username", user.Username)
 
 	if user.FcmToken == "" {
-		utils.ErrorLog.Println("❌ User has no FCM token:", user.Username)
+		utils.Warn(nil, "User has no FCM token for notification", "userId", user.ID.Hex(), "deviceId", user.DeviceID)
 		return
 	}
 
 	err = SendFirebaseNotification(user.FcmToken, notification)
 	if err != nil {
-		utils.ErrorLog.Println("❌ Error sending Firebase notification:", err)
+		utils.Error(nil, "Failed to send Firebase notification", "userId", user.ID.Hex(), "deviceId", user.DeviceID, "error", err.Error())
 		return
 	}
 }
@@ -365,11 +352,11 @@ func SendFirebaseNotification(token string, notification model.Notification) err
 
 	response, err := client.Send(context.Background(), message)
 	if err != nil {
-		log.Printf("❌ Error sending notification to token %s: %v\n", token, err)
+		utils.Error(nil, "Failed to send FCM notification", "token", token, "error", err.Error())
 		return err
 	}
 
-	log.Printf("✅ Successfully sent notification to token %s: %v\n", token, response)
+	utils.Info(nil, "FCM notification sent successfully", "token", token, "response", response)
 
 	return nil
 }
@@ -379,7 +366,7 @@ func saveNotification(notification model.Notification) {
 
 	_, err := database.Notification.InsertOne(context.Background(), notification)
 	if err != nil {
-		utils.ErrorLog.Println("❌ Error saving notification:", err)
+		utils.Error(nil, "Failed to save notification", "deviceId", notification.DeviceID, "error", err.Error())
 		return
 	}
 }

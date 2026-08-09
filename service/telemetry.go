@@ -117,7 +117,7 @@ func BroadcastTelemetry(deviceID string, telemetry interface{}) {
 			Mutex.Unlock()
 			close(client.Send)
 			_ = client.Conn.Close()
-			utils.ErrorLog.Println("❌ Removed slow websocket client")
+			utils.Warn(nil, "Removed slow websocket client", "deviceId", deviceID)
 		}
 	}
 }
