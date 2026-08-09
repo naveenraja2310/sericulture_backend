@@ -2,6 +2,7 @@ package router
 
 import (
 	"sericulture/controller"
+	"sericulture/utils"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,6 +24,7 @@ func GetRouter() *fiber.App {
 
 	app.Use(logger.New())
 	app.Use(recover.New())
+	app.Use(utils.JWTMiddleware)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{

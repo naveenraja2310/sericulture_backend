@@ -79,6 +79,10 @@ func UpdateUser(ctx context.Context, user model.User, id primitive.ObjectID) (*m
 		return nil, errors.New("no document found with the given id")
 	}
 
+	if user.Password != "" {
+		utils.ClearUserCache(id.Hex())
+	}
+
 	return &user, nil
 }
 
@@ -110,6 +114,10 @@ func UpdateUserAndDeviceId(ctx context.Context, user model.User, id primitive.Ob
 
 	if result.MatchedCount == 0 {
 		return nil, errors.New("no document found with the given id")
+	}
+
+	if user.Password != "" {
+		utils.ClearUserCache(id.Hex())
 	}
 
 	return &user, nil

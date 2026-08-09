@@ -43,11 +43,24 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
+	token, err := utils.GenerateJWT(user)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(model.ErrorResponse{
+			ApiPath:      c.OriginalURL(),
+			ErrorCode:    http.StatusInternalServerError,
+			ErrorMessage: err.Error(),
+			ErrorTime:    time.Now(),
+		})
+	}
+
 	// Return a success model
 	return c.Status(http.StatusOK).JSON(model.SuccessResponse{
 		StatusCode:    http.StatusOK,
 		StatusMessage: "success",
-		Data:          user,
+		Data: fiber.Map{
+			"user":  user,
+			"token": token,
+		},
 	})
 }
 

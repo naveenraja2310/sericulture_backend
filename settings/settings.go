@@ -17,6 +17,7 @@ type Configuration struct {
 	DB_TIME        int    `mapstructure:"DB_TIME"`
 	AppPort        string `mapstructure:"APP_PORT"`
 	AllowedDomains string `mapstructure:"ALLOWED_DOMAINS"`
+	JWTSecret      string `mapstructure:"JWT_SECRET"`
 }
 
 func InitConfig() (Configuration, error) {
