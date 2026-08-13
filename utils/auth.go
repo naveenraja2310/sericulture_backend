@@ -133,8 +133,31 @@ func ClearUserCache(userID string) {
 }
 
 func JWTMiddleware(c *fiber.Ctx) error {
-	if c.Method() == fiber.MethodOptions || c.Path() == "/" || c.Path() == "/login" || strings.HasSuffix(c.Path(), "/ws") {
+	publicPaths := map[string]bool{
+		"/":      true,
+		"/login": true,
+	}
+	publicSuffixes := []string{"/ws"}
+	publicPrefixes := []string{"/file/"}
+
+	if c.Method() == fiber.MethodOptions {
 		return c.Next()
+	}
+
+	if publicPaths[c.Path()] {
+		return c.Next()
+	}
+
+	for _, suffix := range publicSuffixes {
+		if strings.HasSuffix(c.Path(), suffix) {
+			return c.Next()
+		}
+	}
+
+	for _, prefix := range publicPrefixes {
+		if strings.HasPrefix(c.Path(), prefix) {
+			return c.Next()
+		}
 	}
 
 	authHeader := c.Get(fiber.HeaderAuthorization)
