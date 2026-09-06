@@ -29,6 +29,8 @@ type Telemetry struct {
 	DehumidifierHum    float64 `json:"dehumidifierHum" bson:"dehumidifierHum"`
 	DehumidifierActive bool    `json:"dehumidifierActive" bson:"dehumidifierActive"`
 	RelaysOn           int     `json:"relaysOn" bson:"relaysOn"`
+	RelaysActive       int     `json:"relaysActive" bson:"relaysActive"`
+	SystemStatus       string  `json:"systemStatus" bson:"systemStatus"`
 
 	// Mode configuration
 	Mode string `json:"mode" bson:"mode"`
@@ -45,6 +47,7 @@ type Telemetry struct {
 
 	// Stage information
 	ActiveStage            int             `json:"activeStage" bson:"activeStage"`
+	StageNumber            int             `json:"stageNumber" bson:"stageNumber"`
 	StageDurationHours     int             `json:"stageDurationHours" bson:"stageDurationHours"`
 	StageElapsedHours      float64         `json:"stageElapsedHours" bson:"stageElapsedHours"`
 	StageRemainingHours    float64         `json:"stageRemainingHours" bson:"stageRemainingHours"`
@@ -140,6 +143,7 @@ func (telemetry *Telemetry) UnmarshalJSON(data []byte) error {
 	if err := decodeStringOrNumber(&telemetry.GprsStatus, "gprs", "gprsStatus"); err != nil {
 		return err
 	}
+	telemetry.GprsStatus = NormalizeGprsStatus(telemetry.GprsStatus)
 	if err := decode(&telemetry.DeviceID, "id", "deviceId"); err != nil {
 		return err
 	}
@@ -183,7 +187,10 @@ func (telemetry *Telemetry) UnmarshalJSON(data []byte) error {
 	if err := decode(&telemetry.FanOffDuration, "foff", "fanOffDuration"); err != nil {
 		return err
 	}
-	if err := decode(&telemetry.ActiveStage, "stg", "activeStage"); err != nil {
+	if err := decode(&telemetry.ActiveStage, "stg", "activeStage", "stageNumber"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.StageNumber, "stg", "stageNumber", "activeStage"); err != nil {
 		return err
 	}
 	if err := decode(&telemetry.StageDurationHours, "dur", "stageDurationHours"); err != nil {
@@ -210,6 +217,17 @@ func (telemetry *Telemetry) UnmarshalJSON(data []byte) error {
 	if err := decodeBool(&telemetry.SystemEnabled, "en", "systemEnabled"); err != nil {
 		return err
 	}
+	if err := decode(&telemetry.SystemStatus, "systemStatus"); err != nil {
+		return err
+	}
+	telemetry.SystemStatus = NormalizeSystemStatus(telemetry.SystemStatus)
+	if telemetry.SystemStatus == "" && preferredKey(fields, "en", "systemEnabled") {
+		if telemetry.SystemEnabled {
+			telemetry.SystemStatus = "ENABLED"
+		} else {
+			telemetry.SystemStatus = "DISABLED"
+		}
+	}
 	if err := decode(&telemetry.DehumidifierHum, "dehum", "dehumidifierHum"); err != nil {
 		return err
 	}
@@ -219,7 +237,9 @@ func (telemetry *Telemetry) UnmarshalJSON(data []byte) error {
 	if err := decode(&telemetry.RelaysOn, "relaysOn", "powerOn"); err != nil {
 		return err
 	}
-
+	if err := decode(&telemetry.RelaysActive, "relaysActive", "relaysOn", "powerOn"); err != nil {
+		return err
+	}
 	return decode(&telemetry.UpdatedAt, "updatedAt")
 }
 
@@ -231,6 +251,28 @@ func NormalizeMode(mode string) string {
 		return "MANUAL"
 	default:
 		return mode
+	}
+}
+
+func NormalizeGprsStatus(status string) string {
+	switch strings.ToUpper(strings.TrimSpace(status)) {
+	case "1", "TRUE", "CONNECTED", "ONLINE":
+		return "CONNECTED"
+	case "0", "FALSE", "DISCONNECTED", "OFFLINE":
+		return "DISCONNECTED"
+	default:
+		return status
+	}
+}
+
+func NormalizeSystemStatus(status string) string {
+	switch strings.ToUpper(strings.TrimSpace(status)) {
+	case "1", "TRUE", "ENABLED", "ON":
+		return "ENABLED"
+	case "0", "FALSE", "DISABLED", "OFF":
+		return "DISABLED"
+	default:
+		return status
 	}
 }
 
@@ -284,4 +326,13 @@ func preferredField(fields map[string]json.RawMessage, keys ...string) (json.Raw
 		}
 	}
 	return nil, false
+}
+
+func preferredKey(fields map[string]json.RawMessage, keys ...string) bool {
+	for _, key := range keys {
+		if _, ok := fields[key]; ok {
+			return true
+		}
+	}
+	return false
 }

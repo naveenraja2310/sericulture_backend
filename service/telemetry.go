@@ -45,6 +45,8 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"dehumidifierHum":    telemetry.DehumidifierHum,
 		"dehumidifierActive": telemetry.DehumidifierActive,
 		"relaysOn":           telemetry.RelaysOn,
+		"relaysActive":       telemetry.RelaysActive,
+		"systemStatus":       telemetry.SystemStatus,
 
 		"mode": telemetry.Mode,
 
@@ -58,6 +60,7 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"fanOffDuration": telemetry.FanOffDuration,
 
 		"activeStage":         telemetry.ActiveStage,
+		"stageNumber":         telemetry.StageNumber,
 		"stageDurationHours":  telemetry.StageDurationHours,
 		"stageElapsedHours":   telemetry.StageElapsedHours,
 		"stageRemainingHours": telemetry.StageRemainingHours,
@@ -133,6 +136,15 @@ func GetTelemetry(ctx context.Context, deviceID string) (*model.Telemetry, error
 		return nil, err
 	}
 	telemetry.Mode = model.NormalizeMode(telemetry.Mode)
+	telemetry.GprsStatus = model.NormalizeGprsStatus(telemetry.GprsStatus)
+	telemetry.SystemStatus = model.NormalizeSystemStatus(telemetry.SystemStatus)
+	if telemetry.SystemStatus == "" {
+		if telemetry.SystemEnabled {
+			telemetry.SystemStatus = "ENABLED"
+		} else {
+			telemetry.SystemStatus = "DISABLED"
+		}
+	}
 	return &telemetry, nil
 }
 

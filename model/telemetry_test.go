@@ -84,3 +84,33 @@ func TestTelemetryUnmarshalNormalizesMode(t *testing.T) {
 		}
 	}
 }
+
+func TestTelemetryUnmarshalSupportsOldStatusFields(t *testing.T) {
+	var telemetry Telemetry
+	err := json.Unmarshal([]byte(`{
+		"mode":"AUTO", "gprsStatus":"CONNECTED", "stageNumber":3,
+		"systemStatus":"ENABLED", "relaysActive":1
+	}`), &telemetry)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if telemetry.Mode != "AUTO" || telemetry.GprsStatus != "CONNECTED" ||
+		telemetry.ActiveStage != 3 || telemetry.StageNumber != 3 ||
+		telemetry.SystemStatus != "ENABLED" || telemetry.RelaysActive != 1 {
+		t.Fatalf("old status fields decoded incorrectly: %+v", telemetry)
+	}
+}
+
+func TestTelemetryUnmarshalNormalizesCompactStatuses(t *testing.T) {
+	var telemetry Telemetry
+	err := json.Unmarshal([]byte(`{"mode":"A", "gprs":1, "en":0, "relaysOn":0}`), &telemetry)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if telemetry.Mode != "AUTO" || telemetry.GprsStatus != "CONNECTED" ||
+		telemetry.SystemStatus != "DISABLED" || telemetry.SystemEnabled {
+		t.Fatalf("compact statuses decoded incorrectly: %+v", telemetry)
+	}
+}
