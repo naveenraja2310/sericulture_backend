@@ -36,12 +36,15 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"heater":      telemetry.Heater,
 		"spare":       telemetry.Spare,
 
-		"gprsStatus":    telemetry.GprsStatus,
-		"deviceId":      telemetry.DeviceID,
-		"uptime":        telemetry.Uptime,
-		"powerOn":       telemetry.PowerOn,
-		"sensorFailure": telemetry.SensorFailure,
-		"timer":         telemetry.Timer,
+		"gprsStatus":         telemetry.GprsStatus,
+		"deviceId":           telemetry.DeviceID,
+		"uptime":             telemetry.Uptime,
+		"powerOn":            telemetry.PowerOn,
+		"sensorFailure":      telemetry.SensorFailure,
+		"timer":              telemetry.Timer,
+		"dehumidifierHum":    telemetry.DehumidifierHum,
+		"dehumidifierActive": telemetry.DehumidifierActive,
+		"relaysOn":           telemetry.RelaysOn,
 
 		"mode": telemetry.Mode,
 
@@ -55,6 +58,7 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"fanOffDuration": telemetry.FanOffDuration,
 
 		"activeStage":         telemetry.ActiveStage,
+		"stageDurationHours":  telemetry.StageDurationHours,
 		"stageElapsedHours":   telemetry.StageElapsedHours,
 		"stageRemainingHours": telemetry.StageRemainingHours,
 		"stages":              telemetry.Stages,
@@ -128,6 +132,7 @@ func GetTelemetry(ctx context.Context, deviceID string) (*model.Telemetry, error
 	if err != nil {
 		return nil, err
 	}
+	telemetry.Mode = model.NormalizeMode(telemetry.Mode)
 	return &telemetry, nil
 }
 
