@@ -19,7 +19,7 @@ func TestTelemetryUnmarshalSupportsOldAndCompactPayloads(t *testing.T) {
 		"senFail": 0, "prodDone": 0, "en": 0, "relaysOn": 0,
 		"stg": 2, "dur": 0, "elap": 0, "rem": 0,
 		"dehum": 0, "dehAct": 0,
-		"stages": [{"dur": 0, "ftMin": 0, "fon": 0, "foff": 0}]
+		"s": [{"dur": 0, "ftMin": 0, "fon": 0, "foff": 0}]
 	}`)
 
 	var oldTelemetry, newTelemetry Telemetry

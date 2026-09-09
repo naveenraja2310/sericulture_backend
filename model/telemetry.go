@@ -202,7 +202,7 @@ func (telemetry *Telemetry) UnmarshalJSON(data []byte) error {
 	if err := decode(&telemetry.StageRemainingHours, "rem", "stageRemainingHours"); err != nil {
 		return err
 	}
-	if err := decode(&telemetry.Stages, "stages"); err != nil {
+	if err := decode(&telemetry.Stages, "s", "stages"); err != nil {
 		return err
 	}
 	if err := decode(&telemetry.LastTelemetryTimestamp, "lastTelemetryTimestamp"); err != nil {
@@ -289,34 +289,34 @@ func (settings *StageSettings) UnmarshalJSON(data []byte) error {
 		return json.Unmarshal(raw, target)
 	}
 
-	if err := decode(&settings.FanTempMin, "ftMin", "fanTempMin"); err != nil {
+	if err := decode(&settings.FanTempMin, "fm", "ftMin", "fanTempMin"); err != nil {
 		return err
 	}
-	if err := decode(&settings.FanTempMax, "ftMax", "fanTempMax"); err != nil {
+	if err := decode(&settings.FanTempMax, "fx", "ftMax", "fanTempMax"); err != nil {
 		return err
 	}
-	if err := decode(&settings.MotorHumMin, "mhMin", "motorHumMin"); err != nil {
+	if err := decode(&settings.MotorHumMin, "mm", "mhMin", "motorHumMin"); err != nil {
 		return err
 	}
-	if err := decode(&settings.MotorHumMax, "mhMax", "motorHumMax"); err != nil {
+	if err := decode(&settings.MotorHumMax, "mx", "mhMax", "motorHumMax"); err != nil {
 		return err
 	}
-	if err := decode(&settings.HeaterTempMin, "htMin", "heaterTempMin"); err != nil {
+	if err := decode(&settings.HeaterTempMin, "hm", "htMin", "heaterTempMin"); err != nil {
 		return err
 	}
-	if err := decode(&settings.HeaterTempMax, "htMax", "heaterTempMax"); err != nil {
+	if err := decode(&settings.HeaterTempMax, "hx", "htMax", "heaterTempMax"); err != nil {
 		return err
 	}
-	if err := decode(&settings.DurationHours, "dur", "durationHours"); err != nil {
+	if err := decode(&settings.DurationHours, "du", "dur", "durationHours"); err != nil {
 		return err
 	}
-	if err := decode(&settings.FanOnDuration, "fon", "fanOnDuration"); err != nil {
+	if err := decode(&settings.FanOnDuration, "on", "fon", "fanOnDuration"); err != nil {
 		return err
 	}
-	if err := decode(&settings.FanOffDuration, "foff", "fanOffDuration"); err != nil {
+	if err := decode(&settings.FanOffDuration, "of", "foff", "fanOffDuration"); err != nil {
 		return err
 	}
-	return decode(&settings.DehumidifierHum, "dehum", "dehumidifierHum")
+	return decode(&settings.DehumidifierHum, "dh", "dehum", "dehumidifierHum")
 }
 
 func preferredField(fields map[string]json.RawMessage, keys ...string) (json.RawMessage, bool) {
