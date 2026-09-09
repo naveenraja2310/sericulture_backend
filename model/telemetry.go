@@ -150,7 +150,7 @@ func (telemetry *Telemetry) UnmarshalJSON(data []byte) error {
 	if err := decode(&telemetry.Uptime, "up", "uptime"); err != nil {
 		return err
 	}
-	if err := decode(&telemetry.PowerOn, "relaysOn", "powerOn"); err != nil {
+	if err := decode(&telemetry.PowerOn, "po", "powerOn"); err != nil {
 		return err
 	}
 	if err := decodeBool(&telemetry.SensorFailure, "senFail", "sensorFailure"); err != nil {
