@@ -32,6 +32,36 @@ type Telemetry struct {
 	RelaysActive       int     `json:"relaysActive" bson:"relaysActive"`
 	SystemStatus       string  `json:"systemStatus" bson:"systemStatus"`
 
+	// Air quality readings
+	CO2       float64 `json:"co2" bson:"co2"`
+	CO2Raw    float64 `json:"co2Raw" bson:"co2Raw"`
+	CO2Pct    float64 `json:"co2Pct" bson:"co2Pct"`
+	CO2Status string  `json:"co2Status" bson:"co2Status"`
+	CO2Warn   bool    `json:"co2Warn" bson:"co2Warn"`
+	NH3       float64 `json:"nh3" bson:"nh3"`
+	NH3Raw    float64 `json:"nh3Raw" bson:"nh3Raw"`
+	NH3Pct    float64 `json:"nh3Pct" bson:"nh3Pct"`
+	NH3Rs     float64 `json:"nh3Rs" bson:"nh3Rs"`
+	NH3Ratio  float64 `json:"nh3Ratio" bson:"nh3Ratio"`
+	NH3Warn   bool    `json:"nh3Warn" bson:"nh3Warn"`
+
+	// Sensor offsets
+	TempOffset float64 `json:"tempOffset" bson:"tempOffset"`
+	HumOffset  float64 `json:"humOffset" bson:"humOffset"`
+	CO2Offset  float64 `json:"co2Offset" bson:"co2Offset"`
+	NH3Offset  float64 `json:"nh3Offset" bson:"nh3Offset"`
+
+	// Air quality thresholds and fan overrides
+	CO2WarnPPM    float64 `json:"co2WarnPPM" bson:"co2WarnPPM"`
+	NH3WarnPPM    float64 `json:"nh3WarnPPM" bson:"nh3WarnPPM"`
+	CO2MinPct     float64 `json:"co2MinPct" bson:"co2MinPct"`
+	CO2MaxPct     float64 `json:"co2MaxPct" bson:"co2MaxPct"`
+	NH3MinPct     float64 `json:"nh3MinPct" bson:"nh3MinPct"`
+	NH3MaxPct     float64 `json:"nh3MaxPct" bson:"nh3MaxPct"`
+	CO2FanOverride bool   `json:"co2FanOverride" bson:"co2FanOverride"`
+	NH3FanOverride bool   `json:"nh3FanOverride" bson:"nh3FanOverride"`
+	AirOverride    bool   `json:"airOverride" bson:"airOverride"`
+
 	// Mode configuration
 	Mode string `json:"mode" bson:"mode"`
 
@@ -70,6 +100,12 @@ type StageSettings struct {
 	FanOnDuration   float64 `json:"fanOnDuration" bson:"fanOnDuration"`   // NEW
 	FanOffDuration  float64 `json:"fanOffDuration" bson:"fanOffDuration"` // NEW
 	DehumidifierHum float64 `json:"dehumidifierHum" bson:"dehumidifierHum"`
+	CO2WarnPPM      float64 `json:"co2WarnPPM" bson:"co2WarnPPM"`
+	NH3WarnPPM      float64 `json:"nh3WarnPPM" bson:"nh3WarnPPM"`
+	CO2MinPct       float64 `json:"co2MinPct" bson:"co2MinPct"`
+	CO2MaxPct       float64 `json:"co2MaxPct" bson:"co2MaxPct"`
+	NH3MinPct       float64 `json:"nh3MinPct" bson:"nh3MinPct"`
+	NH3MaxPct       float64 `json:"nh3MaxPct" bson:"nh3MaxPct"`
 }
 
 // UnmarshalJSON accepts both full-size firmware keys and compact firmware keys.
@@ -234,6 +270,78 @@ func (telemetry *Telemetry) UnmarshalJSON(data []byte) error {
 	if err := decodeBool(&telemetry.DehumidifierActive, "dehAct", "dehumidifierActive"); err != nil {
 		return err
 	}
+	if err := decode(&telemetry.CO2, "co2"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.CO2Raw, "co2Raw"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.CO2Pct, "co2Pct"); err != nil {
+		return err
+	}
+	if err := decodeStringOrNumber(&telemetry.CO2Status, "co2st", "co2Status"); err != nil {
+		return err
+	}
+	if err := decodeBool(&telemetry.CO2Warn, "co2Warn"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.NH3, "nh3"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.NH3Raw, "nh3Raw"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.NH3Pct, "nh3Pct"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.NH3Rs, "nh3Rs"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.NH3Ratio, "nh3Ratio"); err != nil {
+		return err
+	}
+	if err := decodeBool(&telemetry.NH3Warn, "nh3Warn"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.TempOffset, "tOff", "tempOffset"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.HumOffset, "hOff", "humOffset"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.CO2Offset, "co2Off", "co2Offset"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.NH3Offset, "nh3Off", "nh3Offset"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.CO2WarnPPM, "co2Set", "co2WarnPPM"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.NH3WarnPPM, "nh3Set", "nh3WarnPPM"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.CO2MinPct, "co2Min", "co2MinPct"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.CO2MaxPct, "co2Max", "co2MaxPct"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.NH3MinPct, "nh3Min", "nh3MinPct"); err != nil {
+		return err
+	}
+	if err := decode(&telemetry.NH3MaxPct, "nh3Max", "nh3MaxPct"); err != nil {
+		return err
+	}
+	if err := decodeBool(&telemetry.CO2FanOverride, "co2Ovr", "co2FanOverride"); err != nil {
+		return err
+	}
+	if err := decodeBool(&telemetry.NH3FanOverride, "nh3Ovr", "nh3FanOverride"); err != nil {
+		return err
+	}
+	if err := decodeBool(&telemetry.AirOverride, "airOvr", "airOverride"); err != nil {
+		return err
+	}
 	if err := decode(&telemetry.RelaysOn, "relaysOn", "powerOn"); err != nil {
 		return err
 	}
@@ -305,6 +413,24 @@ func (settings *StageSettings) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if err := decode(&settings.HeaterTempMax, "hx", "htMax", "heaterTempMax"); err != nil {
+		return err
+	}
+	if err := decode(&settings.CO2WarnPPM, "cw", "co2WarnPPM"); err != nil {
+		return err
+	}
+	if err := decode(&settings.NH3WarnPPM, "nw", "nh3WarnPPM"); err != nil {
+		return err
+	}
+	if err := decode(&settings.CO2MinPct, "c2min", "co2MinPct"); err != nil {
+		return err
+	}
+	if err := decode(&settings.CO2MaxPct, "c2max", "co2MaxPct"); err != nil {
+		return err
+	}
+	if err := decode(&settings.NH3MinPct, "n3min", "nh3MinPct"); err != nil {
+		return err
+	}
+	if err := decode(&settings.NH3MaxPct, "n3max", "nh3MaxPct"); err != nil {
 		return err
 	}
 	if err := decode(&settings.DurationHours, "du", "dur", "durationHours"); err != nil {

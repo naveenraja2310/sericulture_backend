@@ -48,6 +48,33 @@ func UpsetTelemetry(ctx context.Context, telemetry model.Telemetry) (*model.Tele
 		"relaysActive":       telemetry.RelaysActive,
 		"systemStatus":       telemetry.SystemStatus,
 
+		"co2":     telemetry.CO2,
+		"co2Raw":  telemetry.CO2Raw,
+		"co2Pct":  telemetry.CO2Pct,
+		"co2Status": telemetry.CO2Status,
+		"co2Warn": telemetry.CO2Warn,
+		"nh3":      telemetry.NH3,
+		"nh3Raw":   telemetry.NH3Raw,
+		"nh3Pct":   telemetry.NH3Pct,
+		"nh3Rs":    telemetry.NH3Rs,
+		"nh3Ratio": telemetry.NH3Ratio,
+		"nh3Warn":  telemetry.NH3Warn,
+
+		"tempOffset": telemetry.TempOffset,
+		"humOffset":  telemetry.HumOffset,
+		"co2Offset":  telemetry.CO2Offset,
+		"nh3Offset":  telemetry.NH3Offset,
+
+		"co2WarnPPM":    telemetry.CO2WarnPPM,
+		"nh3WarnPPM":    telemetry.NH3WarnPPM,
+		"co2MinPct":     telemetry.CO2MinPct,
+		"co2MaxPct":     telemetry.CO2MaxPct,
+		"nh3MinPct":     telemetry.NH3MinPct,
+		"nh3MaxPct":     telemetry.NH3MaxPct,
+		"co2FanOverride": telemetry.CO2FanOverride,
+		"nh3FanOverride": telemetry.NH3FanOverride,
+		"airOverride":    telemetry.AirOverride,
+
 		"mode": telemetry.Mode,
 
 		"fanTempMin":     telemetry.FanTempMin,

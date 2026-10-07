@@ -114,3 +114,52 @@ func TestTelemetryUnmarshalNormalizesCompactStatuses(t *testing.T) {
 		t.Fatalf("compact statuses decoded incorrectly: %+v", telemetry)
 	}
 }
+
+func TestTelemetryUnmarshalSupportsAirQualityPayload(t *testing.T) {
+	payload := []byte(`{
+		"co2": 420.5, "co2Raw": 400, "co2Pct": 0.04, "co2st": 1, "co2Warn": 1,
+		"nh3": 12.5, "nh3Raw": 10, "nh3Pct": 0.02, "nh3Rs": 150, "nh3Ratio": 0.8, "nh3Warn": 0,
+		"tOff": 1.5, "hOff": -2, "co2Off": 3, "nh3Off": 4,
+		"co2Set": 500, "nh3Set": 30, "co2Min": 0.01, "co2Max": 0.05,
+		"nh3Min": 0.02, "nh3Max": 0.06, "co2Ovr": 1, "nh3Ovr": 0, "airOvr": 1,
+		"s": [{
+			"cw": 510, "nw": 31, "c2min": 0.011, "c2max": 0.051,
+			"n3min": 0.021, "n3max": 0.061
+		}]
+	}`)
+
+	var telemetry Telemetry
+	if err := json.Unmarshal(payload, &telemetry); err != nil {
+		t.Fatal(err)
+	}
+
+	if telemetry.CO2 != 420.5 || telemetry.CO2Raw != 400 || telemetry.CO2Pct != 0.04 ||
+		telemetry.CO2Status != "1" || !telemetry.CO2Warn {
+		t.Errorf("CO2 values decoded incorrectly: %+v", telemetry)
+	}
+	if telemetry.NH3 != 12.5 || telemetry.NH3Raw != 10 || telemetry.NH3Pct != 0.02 ||
+		telemetry.NH3Rs != 150 || telemetry.NH3Ratio != 0.8 || telemetry.NH3Warn {
+		t.Errorf("NH3 values decoded incorrectly: %+v", telemetry)
+	}
+	if telemetry.TempOffset != 1.5 || telemetry.HumOffset != -2 ||
+		telemetry.CO2Offset != 3 || telemetry.NH3Offset != 4 {
+		t.Errorf("sensor offsets decoded incorrectly: %+v", telemetry)
+	}
+	if telemetry.CO2WarnPPM != 500 || telemetry.NH3WarnPPM != 30 ||
+		telemetry.CO2MinPct != 0.01 || telemetry.CO2MaxPct != 0.05 ||
+		telemetry.NH3MinPct != 0.02 || telemetry.NH3MaxPct != 0.06 {
+		t.Errorf("air quality thresholds decoded incorrectly: %+v", telemetry)
+	}
+	if !telemetry.CO2FanOverride || telemetry.NH3FanOverride || !telemetry.AirOverride {
+		t.Errorf("air overrides decoded incorrectly: %+v", telemetry)
+	}
+	if len(telemetry.Stages) != 1 {
+		t.Fatalf("got %d stages, want 1", len(telemetry.Stages))
+	}
+	stage := telemetry.Stages[0]
+	if stage.CO2WarnPPM != 510 || stage.NH3WarnPPM != 31 ||
+		stage.CO2MinPct != 0.011 || stage.CO2MaxPct != 0.051 ||
+		stage.NH3MinPct != 0.021 || stage.NH3MaxPct != 0.061 {
+		t.Errorf("stage air quality settings decoded incorrectly: %+v", stage)
+	}
+}
