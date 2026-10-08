@@ -220,6 +220,8 @@ func MessageHandler(client mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
+	utils.Info(nil, "MQTT message received for device", "topic", msg.Topic(), "deviceId", telemetry.DeviceID, "payload", string(msg.Payload()))
+
 	go service.UpsetTelemetry(context.Background(), telemetry)
 
 	utils.Info(nil, "Telemetry updated", "deviceId", telemetry.DeviceID)
