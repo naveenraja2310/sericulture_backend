@@ -14,6 +14,7 @@ type User struct {
 	FcmToken     string             `json:"fcmToken" bson:"fcmToken"`
 	IsAdmin      bool               `json:"isAdmin" bson:"isAdmin"`
 	IsSuperAdmin bool               `json:"isSuperAdmin" bson:"isSuperAdmin"`
+	IsCO2NH3User bool               `json:"isCO2NH3User" bson:"isCO2NH3User"`
 	LastLogin    time.Time          `json:"lastLogin" bson:"lastLogin"`
 	LastLogout   time.Time          `json:"lastLogout" bson:"lastLogout"`
 	CreatedAt    time.Time          `json:"createdAt" bson:"createdAt"`

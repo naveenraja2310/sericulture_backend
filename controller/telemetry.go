@@ -74,6 +74,8 @@ func DeviceStatusWS(c *websocket.Conn) {
 
 	service.Mutex.Unlock()
 
+	defer service.RemoveWsClient(deviceID, client)
+
 	utils.Info(nil, "WebSocket connected", "deviceId", deviceID)
 
 	// Send latest telemetry immediately
@@ -88,19 +90,6 @@ func DeviceStatusWS(c *websocket.Conn) {
 		default:
 		}
 	}
-
-	// Cleanup
-	defer func() {
-		service.Mutex.Lock()
-		delete(service.DeviceClients[deviceID], client)
-		if len(service.DeviceClients[deviceID]) == 0 {
-			delete(service.DeviceClients, deviceID)
-		}
-		service.Mutex.Unlock()
-		close(client.Send)
-		_ = c.Close()
-		utils.Info(nil, "WebSocket disconnected", "deviceId", deviceID)
-	}()
 
 	// Read limits
 	c.SetReadLimit(1024 * 10)
@@ -123,6 +112,7 @@ func DeviceStatusWS(c *websocket.Conn) {
 		_, _, err := c.ReadMessage()
 		if err != nil {
 			utils.Error(nil, "WebSocket read error", "deviceId", deviceID, "error", err.Error())
+			utils.Info(nil, "WebSocket disconnected", "deviceId", deviceID)
 			break
 		}
 	}
@@ -140,22 +130,24 @@ func writePump(client *service.WsClient) {
 	for {
 		select {
 		case msg, ok := <-client.Send:
-			_ = client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-
 			if !ok {
+				_ = client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 				_ = client.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
+			if err := client.Conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				return
+			}
 			if err := client.Conn.WriteJSON(msg); err != nil {
-				utils.Error(nil, "WebSocket write error", "deviceId", client.Conn.Subprotocol(), "error", err.Error())
+				utils.Error(nil, "WebSocket write error", "error", err.Error())
 				return
 			}
 
 		case <-ticker.C:
-			_ = client.Conn.SetWriteDeadline(
-				time.Now().Add(writeWait),
-			)
+			if err := client.Conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				return
+			}
 
 			if err := client.Conn.WriteMessage(
 				websocket.PingMessage,
@@ -340,6 +332,29 @@ func SetThreshold(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "threshold updated",
+	})
+}
+
+func SetThresholdAdmin(c *fiber.Ctx) error {
+	var params map[string]float64
+	if err := c.BodyParser(&params); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	if len(params) == 0 {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "at least one threshold value is required",
+		})
+	}
+
+	mqtt.SendCommand(c.Params("id"), fiber.Map{
+		"method": "setThresholdAdmin",
+		"params": params,
+	})
+
+	return c.JSON(fiber.Map{
+		"message": "thresholds updated",
 	})
 }
 
